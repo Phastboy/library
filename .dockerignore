@@ -1,0 +1,9 @@
+.prettierrc
+node_modules
+.pnp
+.pnp.js
+.git
+.gitignore
+.github
+.eslintrc.js
+.dockerignore
