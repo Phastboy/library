@@ -9,13 +9,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('Buddy')
-    .setDescription('Buddy API documentation')
+    .setTitle('Libriary API')
+    .setDescription('Documentation for the Library API')
     .setVersion('0.0.1')
-    .addTag('buddy')
+    .addTag('library')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/', app, document);
+  SwaggerModule.setup('/api/docs', app, document);
 
   await app.listen(port);
   Logger.log(`app is listening at ${port}`, 'app');
