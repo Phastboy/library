@@ -7,6 +7,7 @@ const port = process.env.PORT || 3001;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
     .setTitle('Libriary API')
@@ -21,3 +22,4 @@ async function bootstrap() {
   Logger.log(`app is listening at ${port}`, 'app');
 }
 bootstrap();
+
