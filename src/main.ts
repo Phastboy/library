@@ -22,4 +22,3 @@ async function bootstrap() {
   Logger.log(`app is listening at ${port}`, 'app');
 }
 bootstrap();
-
