@@ -12,6 +12,7 @@ RUN npm install
 COPY . .
 
 # Create a "dist" folder with the production build
+RUN npx prisma generate 
 RUN npm run build
 
 # Expose port and start application
