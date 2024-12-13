@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,7 +17,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDto: CreateUserDto) {
     try {
       const data = await this.authService.create(createUserDto);
       return {
@@ -24,7 +25,7 @@ export class AuthController {
         data: data
       }
     } catch (error: any) {
-      Logger.error(error.message, error.stack, UsersService.name);
+      Logger.error(error.message, error.stack, AuthService.name);
       throw error;
     }
   }
