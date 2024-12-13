@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { UsersService } from 'src/users/users.service';
@@ -8,6 +8,7 @@ export class AuthService {
   constructor(private userService: UsersService) {}
 
   create(createUserDto: CreateUserDto) {
+    Logger.log('registering user...', AuthService.name);
     return this.userService.create(createUserDto);
   }
 

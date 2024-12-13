@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
@@ -13,19 +13,27 @@ export class UsersService {
       where: { email: data.email },
     });
     if (existingUser) {
+      Logger.error('Email already in use');
       throw new BadRequestException('Email already in use');
     }
 
     // Hash the password and Create the user
     const hashedPassword = await argon2.hash(data.password);
-    const { password, ...result } = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        username: data.email.split('@')[0], // Default username based on email
-        password: hashedPassword,
-      },
-    });
+    try {
+      Logger.log('Creating user...', UsersService.name);
+      const { password, ...result } = await this.prisma.user.create({
+        data: {
+          email: data.email,
+          username: data.email.split('@')[0], // Default username based on email
+          password: hashedPassword,
+        },
+      });
+      Logger.log('User created successfully', UsersService.name);
 
-    return result;
+      return result;
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw new BadRequestException('Error creating user');
+    }
   }
 }
