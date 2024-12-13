@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
-  create(createUserDto: CreateUserDto): CreateUserDto {
-    return createUserDto;
+  constructor(private userService: UsersService) {}
+
+  create(createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
   }
 
   findAll() {
