@@ -25,7 +25,7 @@ export class AuthController {
         data: data
       }
     } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthService.name);
+      Logger.error(error.message, error.stack, AuthController.name);
       throw error;
     }
   }
