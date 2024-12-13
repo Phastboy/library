@@ -13,12 +13,16 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       map((response) => {
-        const statusCode = context.switchToHttp().getResponse().statusCode || HttpStatus.OK;
+        const httpContext = context.switchToHttp();
+        const request = httpContext.getRequest();
+        const statusCode = httpContext.getResponse().statusCode || HttpStatus.OK;
+        const method = request.method;
+        const url = request.url;
         return {
           success: true,
           status: statusCode,
-          message: response.message ?? 'Request was successful',
-          data: response.data,
+          message: `Successfully processed ${method} request to ${url}`,
+          data: response,
         };
       }),
       catchError((err) => {
@@ -27,8 +31,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
           subscriber.next({
             success: false,
             status: status,
-            message: err.response?.message || err.message || 'An error occurred',
-            details: err.response?.error || err.stack || 'No additional details available',
+            message: err.response?.message ?? err.message ?? err ?? 'An error occurred',
           });
           subscriber.complete();
         });
