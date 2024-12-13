@@ -6,7 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
@@ -21,20 +21,9 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
         return {
           success: true,
           status: statusCode,
-          message: `Successfully processed ${method} request to ${url}`,
-          data: response,
+          message: response.message ?? `Successfully processed ${method} request to ${url}`,
+          data: response.data ?? response,
         };
-      }),
-      catchError((err) => {
-        const status = err.status || HttpStatus.INTERNAL_SERVER_ERROR;
-        return new Observable((subscriber) => {
-          subscriber.next({
-            success: false,
-            status: status,
-            message: err.response?.message ?? err.message ?? err ?? 'An error occurred',
-          });
-          subscriber.complete();
-        });
       }),
     );
   }
