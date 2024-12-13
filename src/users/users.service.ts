@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
@@ -13,8 +13,8 @@ export class UsersService {
       where: { email: data.email },
     });
     if (existingUser) {
-      Logger.error('Email already in use');
-      throw new BadRequestException('Email already in use');
+      Logger.error('Email already in use', UsersService.name);
+      throw new BadRequestException('The email address is already associated with an account.');
     }
 
     // Hash the password and Create the user
