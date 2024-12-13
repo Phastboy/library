@@ -17,7 +17,16 @@ export class AuthController {
 
   @Post('register')
   create(@Body() createUserDto: CreateUserDto) {
-    return this.authService.create(createUserDto);
+    try {
+      const data = await this.authService.create(createUserDto);
+      return {
+        message: 'User registered successfully',
+        data: data
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw error;
+    }
   }
 
   @Get()
