@@ -7,16 +7,30 @@ import { UsersService } from 'src/users/users.service';
 export class AuthService {
   constructor(private userService: UsersService) {}
 
-  create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
-    return this.userService.create(createUserDto);
+    const { email, id, ...others} = await this.userService.create(createUserDto);
+    const token = await this.userService.generateEmailVerificationToken(email, id);
+    const sendEmail = await this.userService.sendEmailVerificationEmail(email, token);
+    return {
+      message: 'User registered successfully',
+      data: {
+        email,
+        username: others.username,
+      }
+    }
   }
 
   async verifyEmail(email: string, token: string) {
     Logger.log('Received request to verify email', AuthService.name);
-    return {
-      message: `This action verifies email`,
-      details: `under development`,
+    try {
+      return {
+        message: 'your email will be verified here',
+        details: 'email verification feature is actively under development',
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
     }
   }
 

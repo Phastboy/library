@@ -20,10 +20,7 @@ export class AuthController {
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       const data = await this.authService.create(createUserDto);
-      return {
-        message: 'User registered successfully',
-        data: data
-      }
+      return data;
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -33,11 +30,7 @@ export class AuthController {
   @Get('verify-email')
   async verifyEmail(@Body() email: string, @Body() token: string) {
     try {
-      const data = await this.authService.verifyEmail(email, token);
-      return {
-        message: 'Email verified successfully',
-        data: data
-      }
+      return await this.authService.verifyEmail(email, token);
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
