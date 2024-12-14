@@ -1,17 +1,25 @@
-# Base image: node:lts-iron
-FROM node:lts-iron
+FROM node:lts-alpine
 
-# Create app directory
+# Set environment variable
+ENV NODE_ENV=production
+
+# Install OpenSSL (libressl) and required dependencies
+RUN apk update && apk add --no-cache \
+    openssl \
+    libressl \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
 WORKDIR /usr/src/app
 
-# Copy and Install app dependencies
-COPY package*.json ./
-RUN npm install
+# Copy package files and install dependencies
+COPY ["package.json", "package-lock.json*", "./"]
+RUN npm install --production --silent && mv node_modules ../
 
-# Bundle app source
+# Copy the rest of the application files
 COPY . .
 
-# Create a "dist" folder with the production build
+# Generate Prisma client and build the app
 RUN npx prisma generate 
 RUN npm run build
 
