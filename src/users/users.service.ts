@@ -9,7 +9,14 @@ import nodemailer from 'nodemailer';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly secret = process.env.JWT_SECRET ?? 'development';
+  private readonly secret = () => {
+      const secret = process.env.JWT_SECRET ?? 'development';
+      if (secret === 'development') {
+          Logger.warn('cannot find JWT secret in environment variables', UsersService.name);
+          Logger.warn('Using default JWT secret', UsersService.name);
+      }
+      return secret;
+  }
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
@@ -60,7 +67,7 @@ export class UsersService {
 
     // Generate the token
     Logger.log('Generating token...', UsersService.name);
-    const token = jwt.sign({ email }, this.secret, { expiresIn: '1h' });
+    const token = jwt.sign({ email }, this.secret(), { expiresIn: '1h' });
     Logger.log('Token generated', UsersService.name);
     return token;
   }
