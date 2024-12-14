@@ -30,6 +30,20 @@ export class AuthController {
     }
   }
 
+  @Get('verify-email')
+  async verifyEmail(@Body() email: string, @Body() token: string) {
+    try {
+      const data = await this.authService.verifyEmail(email, token);
+      return {
+        message: 'Email verified successfully',
+        data: data
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
   @Get()
   findAll() {
     return this.authService.findAll();
