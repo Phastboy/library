@@ -12,6 +12,14 @@ export class AuthService {
     return this.userService.create(createUserDto);
   }
 
+  async verifyEmail(email: string, token: string) {
+    Logger.log('Received request to verify email', AuthService.name);
+    return {
+      message: `This action verifies email`,
+      details: `under development`,
+    }
+  }
+
   findAll() {
     return {
       message: `This action returns all auth`,
