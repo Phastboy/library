@@ -8,14 +8,16 @@ generator client {
 }
 
 model User {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  email       String  @unique
-  username    String  @unique
-  role        String  @default("user")
-  password    String
-  country     String? @default("")
-  countryCode String? @default("")
-  state       String? @default("")
-  address     String? @default("")
-  phoneNumber String? @default("")
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  email             String  @unique
+  username          String  @unique
+  role              String  @default("user")
+  password          String
+  country           String? @default("")
+  countryCode       String? @default("")
+  state             String? @default("")
+  address           String? @default("")
+  phoneNumber       String? @default("")
+  isVerified        Boolean @default(false)
+  verificationToken String? @default("")
 }
