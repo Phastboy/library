@@ -43,7 +43,7 @@ export class AuthController {
       throw error;
     }
   }
-  
+
   @Get()
   findAll() {
     return this.authService.findAll();
