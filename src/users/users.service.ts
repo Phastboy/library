@@ -3,17 +3,21 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import * as jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private mailerService: MailerService) {}
 
   private readonly secret = () => {
-      const secret = process.env.JWT_SECRET ?? 'development';
-      if (secret === 'development') {
-          Logger.warn('cannot find JWT secret in environment variables', UsersService.name);
-          Logger.warn('Using default JWT secret', UsersService.name);
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        Logger.error('JWT secret is not set!', UsersService.name);
+        if(process.env.NODE_ENV !== 'production') {
+          Logger.warn('Using default secret', UsersService.name)
+          return 'default-secret';
+        }
+        throw new InternalServerErrorException('JWT secret is not set');
       }
       return secret;
   }
@@ -52,7 +56,7 @@ export class UsersService {
     }
   }
 
-  async generateEmailVerificationToken(email: string) {
+  async generateEmailVerificationToken(email: string, id: string) {
     Logger.log('Received request to generate email verification token', UsersService.name);
     // Check if the user exists
     Logger.log('Checking if user exists...', UsersService.name);
@@ -74,53 +78,86 @@ export class UsersService {
 
   async verifyEmailVerificationToken(token: string) {
     Logger.log('Received request to verify email verification token', UsersService.name);
+    if (!token || typeof token !== 'string') {
+      Logger.error('Invalid token: Token is required and must be a string', UsersService.name);
+      throw new BadRequestException('Invalid token');
+    }
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const decoded = jwt.verify(token, this.secret);
+      const decoded = jwt.verify(token, this.secret());
       Logger.log('Token verified', UsersService.name);
-      return decoded;
+
+      // update the user's email verification status
+      Logger.log('Updating user email verification status...', UsersService.name);
+      const decodedToken = decoded as jwt.JwtPayload & { email: string };
+      Logger.log('Decoded token:', decodedToken, UsersService.name);
+      await this.prisma.user.update({
+        where: { email: decodedToken.email },
+        data: { emailIsVerified: true },
+      });
+      return 'Email verified successfully';
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
+      if(error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token has expired');
+      }
       throw new BadRequestException('Invalid token');
     }
   }
 
-  async sendEmailVerificationEmail(email: string, token: string) {
-    Logger.log('Received request to send email verification email', UsersService.name);
-    // Create a transporter
-    Logger.log('Creating transporter...', UsersService.name);
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-    });
-    if (!transporter) {
-      Logger.error('Error creating transporter', UsersService.name);
-      throw new InternalServerErrorException('Error sending email');
-    }
-    Logger.log('Transporter created', UsersService.name);
+  private generateVerificationLink(token: string): string {
+    Logger.log('Generating verification link...');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080/api/auth';
+    return `${frontendUrl}/verify-email?token=${token}`;
+  }
 
-    // Send the email
-    Logger.log('Sending email...', UsersService.name);
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${token}` || 'http://localhos:8080/api/auth';
-    if (!verificationLink) {
-      Logger.error('Error creating verification link', UsersService.name);
+  async sendEmail(email: string, subject: string, content: string) {
+    Logger.log('Sending email...');
+
+    try {
+      const info = await this.mailerService.sendMail({
+        from: process.env.SMTP_FROM || 'stationphast@gmail.com',
+        to: email,
+        subject,
+        html: content,
+      });
+      Logger.log(`Email sent successfully: ${info.messageId}`);
+    } catch (error) {
+      Logger.error('Error sending email', error.stack);
       throw new InternalServerErrorException('Error sending email');
     }
+  }
+  
+  async sendEmailVerificationEmail(email: string, token: string) {
+    Logger.log('Preparing to send verification email...');
+    const verificationLink = this.generateVerificationLink(token);
+
+    const subject = 'Email Verification';
+    const content = `
+      <body style="font-family: Arial, sans-serif; text-align: center;">
+        <h1> Welcome to Library Management System </h1>
+        <p style="font-size: 1.2em;"> Please verify your email address to complete your registration </p>
+        <a href="${verificationLink}"> 
+          <button style="background-color: #4CAF50; padding: 10px 20px; color: white; border: none; border-radius: 5px;">
+            Verify Email
+          </button>
+        </a>
+      </body>
+    `;
+
+    await this.sendEmail(email, subject, content);
+  }
+
+  async delete(id: string){
     try {
-      const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to: email,
-      subject: 'Email Verification',
-      text: `Click the following link to verify your email: ${verificationLink}/verify-email?token=${token}`,
+      Logger.log('Deleting user...', UsersService.name);
+      return await this.prisma.user.delete({
+        where: { id },
       });
-      Logger.log(`Email sent: ${info.messageId}`, UsersService.name);
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
-      throw new InternalServerErrorException('Error sending email');
+      throw new InternalServerErrorException('Error deleting user');
     }
   }
 }
