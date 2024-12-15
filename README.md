@@ -4,7 +4,7 @@
 ## Features
 ### User
 #### Authentication
-- [ ] Sign up
+- [X] Sign up
 - [ ] Sign in
 - [ ] Sign out
 
@@ -52,8 +52,6 @@ The project is built using the following technologies:
 ## API Documentation
 The API documentation is available [here](https://library-czvh.onrender.com/api/docs).
 
-## CI/CD
-- [ ] Github packages
 
 ## Deployment
 The application is deployed to Render. Check it out [here](https://library-czvh.onrender.com).
