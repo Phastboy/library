@@ -71,14 +71,16 @@ To run this project locally, you need to have the following installed on your ma
 ##### Using curl
 To run the project locally, you can use the setup script by running the command below:
 ```bash
-curl -o setup.sh https://github.com/phastboy/library/raw/main/setup
+curl -o setup https://raw.githubusercontent.com/Phastboy/library/refs/heads/main/setup
+chmod +x setup
 ./setup
 ```
 
 ##### Using wget
 Alternatively, you can run the command below:
 ```bash
-wget https://github.com/phastboy/library/raw/main/setup
+wget https://raw.githubusercontent.com/Phastboy/library/refs/heads/main/setup
+chmod +x setup
 ./setup
 ```
 
