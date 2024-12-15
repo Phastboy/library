@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Step 1: Ask if the user wants to clone their fork
+echo "Do you want to clone your own fork of the repository? (y/n)"
+read -p "(Default: no) " fork_response
+
+# If the user wants to clone their fork
+if [[ "$fork_response" == "y" || "$fork_response" == "Y" ]]; then
+    read -p "Enter the URL of your fork (e.g. https://github.com/your-username/library.git): " FORK_URL
+    git clone "$FORK_URL"
+else
+    # Default repository URL
+    echo "Cloning the main repository..."
+    git clone https://github.com/phastboy/library.git
+fi
+
+# Step 2: Navigate to the project directory
+cd library
+
+# Step 3: Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Step 4: Create .env file dynamically
+echo "Creating .env file..."
+
+# Collect dynamic inputs from the user
+read -p "Enter PORT (default 3000): " PORT
+PORT=${PORT:-3000}
+
+read -p "Enter DATABASE URL (e.g. db://host:port/databaseName): " DATABASE_URL
+read -p "Enter JWT Secret: " JWT_SECRET
+read -p "Enter SMTP Host: " SMTP_HOST
+read -p "Enter SMTP Port: " SMTP_PORT
+read -p "Enter SMTP User: " SMTP_USER
+read -p "Enter SMTP Password: " SMTP_PASS
+read -p "Enter SMTP From Address: " SMTP_FROM
+
+# Write the collected values to the .env file
+cat <<EOL > .env
+PORT=$PORT
+DATABASE_URL=$DATABASE_URL
+JWT_SECRET=$JWT_SECRET
+SMTP_HOST=$SMTP_HOST
+SMTP_PORT=$SMTP_PORT
+SMTP_USER=$SMTP_USER
+SMTP_PASS=$SMTP_PASS
+SMTP_FROM=$SMTP_FROM
+EOL
+
+echo ".env file has been created with your values."
+
+# Step 5: Generate Prisma client
+echo "Generating Prisma client..."
+npx prisma generate
+
+# Step 6: Run Prisma Studio (optional, if you want to view the database)
+echo "Running Prisma Studio..."
+npx prisma studio &
+
+# Step 7: Run the application
+echo "Running the application..."
+npm run dev
+
+echo "Setup complete! Your app is running."

@@ -65,7 +65,24 @@ To run this project locally, you need to have the following installed on your ma
 - **MongoDB**: Check out the [official guide](https://docs.mongodb.com/manual/installation/) for instructions on how to install it.
 - **Git**: Check out the [official guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for instructions on how to install it.
 
-### Installation
+### Running the project locally
+
+#### Automated setup
+##### Using curl
+To run the project locally, you can use the setup script by running the command below:
+```bash
+curl -o setup.sh https://github.com/phastboy/library/raw/main/setup
+./setup
+```
+
+##### Using wget
+Alternatively, you can run the command below:
+```bash
+wget https://github.com/phastboy/library/raw/main/setup
+./setup
+```
+
+#### Manual setup
 To get a local copy up and running follow these simple steps.
 ```bash
 git clone https://github.com/phastboy/library.git
