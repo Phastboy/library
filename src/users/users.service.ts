@@ -10,10 +10,14 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService, private mailerService: MailerService) {}
 
   private readonly secret = () => {
-      const secret = process.env.JWT_SECRET ?? 'development';
-      if (secret === 'development') {
-          Logger.warn('cannot find JWT secret in environment variables', UsersService.name);
-          Logger.warn('Using default JWT secret', UsersService.name);
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        Logger.error('JWT secret is not set!', UsersService.name);
+        if(process.env.NODE_ENV !== 'production') {
+          Logger.warn('Using default secret', UsersService.name)
+          return 'default-secret';
+        }
+        throw new InternalServerErrorException('JWT secret is not set');
       }
       return secret;
   }
@@ -77,7 +81,7 @@ export class UsersService {
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const decoded = jwt.verify(token, this.secret);
+      const decoded = jwt.verify(token, this.secret());
       Logger.log('Token verified', UsersService.name);
       return decoded;
     } catch (error) {
@@ -125,5 +129,17 @@ export class UsersService {
     `;
 
     await this.sendEmail(email, subject, content);
+  }
+
+  async delete(id: string){
+    try {
+      Logger.log('Deleting user...', UsersService.name);
+      return await this.prisma.user.delete({
+        where: { id },
+      });
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw new InternalServerErrorException('Error deleting user');
+    }
   }
 }
