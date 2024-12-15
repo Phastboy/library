@@ -107,9 +107,11 @@ export class UsersService {
   }
 
   private generateVerificationLink(token: string): string {
-    Logger.log('Generating verification link...');
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080/api/auth';
-    return `${frontendUrl}/verify-email?token=${token}`;
+    const baseUrl = process.env.API_URL || 'http://localhost:8080';
+    const url = new URL('/api/auth/verify-email', baseUrl);
+    url.searchParams.set('token', token);
+    Logger.log('Verification link:', url.toString());
+    return url.toString();
   }
 
   async sendEmail(email: string, subject: string, content: string) {
@@ -129,22 +131,29 @@ export class UsersService {
     }
   }
   
+  private generateEmailTemplate(content: string): string {
+    return `
+        <body style="font-family: Arial, sans-serif; text-align: center;">
+            ${content}
+        </body>
+    `;
+  }
+
+
   async sendEmailVerificationEmail(email: string, token: string) {
     Logger.log('Preparing to send verification email...');
     const verificationLink = this.generateVerificationLink(token);
 
     const subject = 'Email Verification';
-    const content = `
-      <body style="font-family: Arial, sans-serif; text-align: center;">
-        <h1> Welcome to Library Management System </h1>
-        <p style="font-size: 1.2em;"> Please verify your email address to complete your registration </p>
-        <a href="${verificationLink}"> 
-          <button style="background-color: #4CAF50; padding: 10px 20px; color: white; border: none; border-radius: 5px;">
+    const content = this.generateEmailTemplate(`
+        <h1>Welcome to MyLibrary!</h1>
+        <p>Please click the button below to verify your email address</p>
+        <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+          <button style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none;">
             Verify Email
           </button>
         </a>
-      </body>
-    `;
+    `);
 
     await this.sendEmail(email, subject, content);
   }
