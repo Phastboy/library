@@ -21,12 +21,16 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(email: string, token: string) {
+  async verifyEmail(token: string) {
     Logger.log('Received request to verify email', AuthService.name);
     try {
-      return {
-        message: 'your email will be verified here',
-        details: 'email verification feature is actively under development',
+      const verified = await this.userService.verifyEmailVerificationToken(token);
+      if (verified) {
+        Logger.log('Email verified successfully', AuthService.name);
+        return {
+          message: verified,
+          details: 'You can now login to your account',
+        }
       }
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);

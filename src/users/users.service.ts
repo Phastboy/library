@@ -78,14 +78,30 @@ export class UsersService {
 
   async verifyEmailVerificationToken(token: string) {
     Logger.log('Received request to verify email verification token', UsersService.name);
+    if (!token || typeof token !== 'string') {
+      Logger.error('Invalid token: Token is required and must be a string', UsersService.name);
+      throw new BadRequestException('Invalid token');
+    }
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
       const decoded = jwt.verify(token, this.secret());
       Logger.log('Token verified', UsersService.name);
-      return decoded;
+
+      // update the user's email verification status
+      Logger.log('Updating user email verification status...', UsersService.name);
+      const decodedToken = decoded as jwt.JwtPayload & { email: string };
+      Logger.log('Decoded token:', decodedToken, UsersService.name);
+      await this.prisma.user.update({
+        where: { email: decodedToken.email },
+        data: { emailIsVerified: true },
+      });
+      return 'Email verified successfully';
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
+      if(error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token has expired');
+      }
       throw new BadRequestException('Invalid token');
     }
   }
@@ -122,9 +138,11 @@ export class UsersService {
       <body style="font-family: Arial, sans-serif; text-align: center;">
         <h1> Welcome to Library Management System </h1>
         <p style="font-size: 1.2em;"> Please verify your email address to complete your registration </p>
-        <button style="background-color: #4CAF50; padding: 10px 20px; color: white; border: none; border-radius: 5px;">
-          <a href="${verificationLink}"> Verify Email </a>
-        </button>
+        <a href="${verificationLink}"> 
+          <button style="background-color: #4CAF50; padding: 10px 20px; color: white; border: none; border-radius: 5px;">
+            Verify Email
+          </button>
+        </a>
       </body>
     `;
 

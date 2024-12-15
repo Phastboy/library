@@ -18,6 +18,5 @@ model User {
   state             String? @default("")
   address           String? @default("")
   phoneNumber       String? @default("")
-  isVerified        Boolean @default(false)
-  verificationToken String? @default("")
+  emailIsVerified   Boolean @default(false)
 }

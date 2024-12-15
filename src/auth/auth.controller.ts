@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -28,9 +29,13 @@ export class AuthController {
   }
 
   @Get('verify-email')
-  async verifyEmail(@Body() email: string, @Body() token: string) {
+  async verifyEmail(@Query('token') token: string) {
+    Logger.log(`Received request to verify email with token ${token}`, AuthController.name);
     try {
-      return await this.authService.verifyEmail(email, token);
+      if (!token) {
+        throw new Error('Token are required');
+      }
+      return await this.authService.verifyEmail(token);
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
