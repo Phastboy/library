@@ -11,7 +11,7 @@ model User {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   email             String  @unique
   username          String  @unique
-  role              String  @default("user")
+  role              Role   @default(user)
   password          String
   address           Address? 
   phoneNumber       String? @default("")
@@ -36,4 +36,9 @@ model Address {
   userId           String  @unique @map("user_id") @db.ObjectId
 
   @@map("addresses")
+}
+
+enum Role {
+  user
+  admin
 }

@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto} from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
+import { RequestPayload, Role } from 'src/types';
 
 @Injectable()
 export class AuthService {
@@ -9,14 +10,17 @@ export class AuthService {
 
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
-    const { email, id, ...others} = await this.userService.create(createUserDto);
-    const token = await this.userService.generateEmailVerificationToken(email, id);
+    const { email, username, role: prismaRole, id, ...others} = await this.userService.create(createUserDto);
+    const role: Role = prismaRole as Role;
+    const payload: RequestPayload = { email, username, role, id };
+    const token = await this.userService.generateEmailVerificationToken(payload);
     const sendEmail = await this.userService.sendEmailVerificationEmail(email, token);
     return {
       message: 'User registered successfully',
       data: {
         email,
-        username: others.username,
+        username,
+        role,
       }
     }
   }
@@ -24,12 +28,11 @@ export class AuthService {
   async verifyEmail(token: string) {
     Logger.log('Received request to verify email', AuthService.name);
     try {
-      const verified = await this.userService.verifyEmailVerificationToken(token);
-      if (verified) {
-        Logger.log('Email verified successfully', AuthService.name);
+      const data = await this.userService.verifyEmailVerificationToken(token);
+      if (data) {
         return {
-          message: verified,
-          details: 'You can now login to your account',
+          message: 'Email verified successfully',
+          data,
         }
       }
     } catch (error: any) {

@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsEmail, IsBoolean, IsPhoneNumber, IsStrongPassword } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsBoolean, IsPhoneNumber, IsStrongPassword, IsEnum } from 'class-validator';
+import { Role } from 'src/types';
 
 export class CreateUserDto {
   @IsEmail()
@@ -11,8 +12,8 @@ export class CreateUserDto {
   password: string;
 
   @IsOptional()
-  @IsString()
-  role?: string;
+  @IsEnum(Role)
+  role?: Role;
 
   @IsOptional()
   @IsPhoneNumber()
