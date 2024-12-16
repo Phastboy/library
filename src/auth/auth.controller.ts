@@ -59,4 +59,21 @@ export class AuthController {
       throw error;
     }
   }
+
+  @Patch('update-profile')
+  async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
+    Logger.log('Received request to update profile', AuthController.name);
+    try {
+      Logger.log(`Updating profile for user with id ${req.user.id}`, AuthController.name);
+      if (!req.user.id) {
+        Logger.error('User id is required', AuthController.name);
+        throw new Error('User id is required');
+      }
+      const updated = await this.authService.updateProfile(req.user.id, updateUserDto);
+      return updated;
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
 }

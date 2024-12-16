@@ -51,4 +51,18 @@ export class AuthService {
       throw error;
     }
   }
+
+  async updateProfile(id: string, updateUserDto: UpdateUserDto) {
+    Logger.log('Received request to update profile', AuthService.name);
+    try {
+      const profile = await this.userService.update(id, updateUserDto);
+      return {
+        message: 'Profile updated successfully',
+        data: profile,
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
+    }
+  }
 }
