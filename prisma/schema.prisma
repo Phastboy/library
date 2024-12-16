@@ -13,8 +13,6 @@ model User {
   username          String  @unique
   role              String  @default("user")
   password          String
-  country           String? @default("")
-  countryCode       String? @default("")
   address           Address? 
   phoneNumber       String? @default("")
   emailIsVerified   Boolean @default(false)

@@ -9,8 +9,6 @@ User {
     string password
     string role
     string emailIsVerified
-    string country
-    string countryCode
     string phoneNumber
     object address
     string createdAt
