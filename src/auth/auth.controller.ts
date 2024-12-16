@@ -43,6 +43,23 @@ export class AuthController {
     }
   }
 
+  @Post('/login')
+  async login(@Body() createUserDto: CreateUserDto) {
+    Logger.log('Received request to login', AuthController.name);
+    try {
+      return {
+        message: 'this endpoint is actively under development',
+        data: {
+          email: createUserDto.email,
+          username: createUserDto.username,
+        },
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
   @Get('/profile')
   async profile(@Req() req) {
     Logger.log('Received request to get profile', AuthController.name);
