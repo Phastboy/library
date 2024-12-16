@@ -13,6 +13,7 @@ import {
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
+import { LoginDto } from 'src/dto/auth/login.dto';
 
 @Controller('')
 export class AuthController {
@@ -44,16 +45,12 @@ export class AuthController {
   }
 
   @Post('/login')
-  async login(@Body() createUserDto: CreateUserDto) {
+  async login(@Body() loginDto: LoginDto) {
     Logger.log('Received request to login', AuthController.name);
     try {
-      return {
-        message: 'this endpoint is actively under development',
-        data: {
-          email: createUserDto.email,
-          username: createUserDto.username,
-        },
-      }
+      const data = await this.authService.login(loginDto);
+      Logger.log(`Login successful for user with email ${loginDto.email}`, AuthController.name);
+      return data;
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;

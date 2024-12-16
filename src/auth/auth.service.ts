@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto} from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { RequestPayload, Role } from 'src/types';
+import { LoginDto } from 'src/dto/auth/login.dto';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,29 @@ export class AuthService {
         username,
         role,
       }
+    }
+  }
+
+  // login
+  async login(data: LoginDto) {
+    Logger.log('Received request to login', AuthService.name);
+    try {
+      const user = await this.userService.findByEmail(data.email);
+      if (!user) {
+        throw new BadRequestException('Invalid email');
+      }
+      const isPasswordValid = await argon2.verify(user.password, data.password);
+      if (!isPasswordValid) {
+        throw new BadRequestException('Invalid password');
+      }
+      const { password, ...result } = user;
+      return {
+        message: 'Login successful',
+        data: result,
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
     }
   }
 

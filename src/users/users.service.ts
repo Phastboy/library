@@ -161,7 +161,7 @@ export class UsersService {
       return users;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
-      throw new InternalServerErrorException('Error finding users');
+      throw error;
     }
   }
 
@@ -180,13 +180,27 @@ export class UsersService {
       return user;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
-      // catch the error from user===null
-      if(error.message === 'User not found') {
+      throw error;
+    }
+  }
+
+  // find user by email
+  async findByEmail(email: string){
+    Logger.log(`Finding user with email ${email}`, UsersService.name);
+    try {
+      Logger.log('Finding user...', UsersService.name);
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+      if (user === null) {
         Logger.error('User not found', UsersService.name);
         throw new BadRequestException('User not found');
       }
-      // catch other errors
-      throw new InternalServerErrorException('Error finding user');
+      Logger.log(`User found: ${user.email}`, UsersService.name);
+      return user;
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw error;
     }
   }
 
