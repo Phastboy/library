@@ -8,6 +8,7 @@ import {
   Delete,
   Logger,
   Query,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -43,32 +44,19 @@ export class AuthController {
   }
 
   @Get('/profile')
-  async profile(@Query('id') id: string) {
+  async profile(@Req() req) {
+    Logger.log('Received request to get profile', AuthController.name);
     try {
-      return await this.authService.profile(id);
+      Logger.log(`Fetching profile for user with id ${req.user.id}`, AuthController.name);
+      if (!req.user.id) {
+        Logger.error('User id is required', AuthController.name);
+        throw new Error('User id is required');
+      }
+      const profile = await this.authService.profile(req.user.id);
+      return profile;
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
     }
-  }
-
-  @Get()
-  findAll() {
-    return this.authService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateUserDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
   }
 }

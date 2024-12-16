@@ -41,7 +41,7 @@ export class AuthService {
   async profile(id: string) {
     Logger.log('Received request to get profile', AuthService.name);
     try {
-      const profile = await this.userService.find(id);
+      const profile = await this.userService.findOne(id);
       return {
         message: 'Profile fetched successfully',
         data: profile,
@@ -50,24 +50,5 @@ export class AuthService {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;
     }
-  }
-
-  findAll() {
-    return {
-      message: `This action returns all auth`,
-      details: `under development`,
-    };
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateUserDto) {
-    return updateAuthDto;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
   }
 }

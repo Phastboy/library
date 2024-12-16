@@ -4,6 +4,7 @@ import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
 import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
+import { UpdateUserDto } from 'src/auth/dto/update-auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -43,7 +44,7 @@ export class UsersService {
       const { password, ...result } = await this.prisma.user.create({
         data: {
           email: data.email,
-          username: data.email.split('@')[0], // Default username based on email
+          username: data.username,
           password: hashedPassword,
         },
       });
@@ -158,7 +159,19 @@ export class UsersService {
     await this.sendEmail(email, subject, content);
   }
 
-  async find(id: string){
+  async findAll(){
+    Logger.log('Finding all users...', UsersService.name);
+    try {
+      const users = await this.prisma.user.findMany();
+      Logger.log(`Found ${users.length} users`, UsersService.name);
+      return users;
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw new InternalServerErrorException('Error finding users');
+    }
+  }
+
+  async findOne(id: string){
     Logger.log(`Finding user with id ${id}`, UsersService.name);
     try {
       Logger.log('Finding user...', UsersService.name);
@@ -180,6 +193,22 @@ export class UsersService {
       }
       // catch other errors
       throw new InternalServerErrorException('Error finding user');
+    }
+  }
+
+  async update(id: string, data: UpdateUserDto){
+    Logger.log(`Updating user with id ${id}`, UsersService.name);
+    try {
+      Logger.log('Updating user...', UsersService.name);
+      const update = await this.prisma.user.update({
+        where: { id },
+        data,
+      });
+      Logger.log(`User updated: ${update}`, UsersService.name);
+      return update;
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw new InternalServerErrorException('Error updating user');
     }
   }
 
