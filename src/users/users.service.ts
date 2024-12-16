@@ -5,23 +5,11 @@ import { CreateUserDto } from 'src/dto/user/create-user.dto';
 import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
+import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService, private mailerService: MailerService) {}
-
-  private readonly secret = () => {
-      const secret = process.env.JWT_SECRET;
-      if (!secret) {
-        Logger.error('JWT secret is not set!', UsersService.name);
-        if(process.env.NODE_ENV !== 'production') {
-          Logger.warn('Using default secret', UsersService.name)
-          return 'default-secret';
-        }
-        throw new InternalServerErrorException('JWT secret is not set');
-      }
-      return secret;
-  }
+  constructor(private readonly prisma: PrismaService, private mailerService: MailerService, private tokenService: TokenService) {}
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
@@ -72,7 +60,7 @@ export class UsersService {
 
     // Generate the token
     Logger.log('Generating token...', UsersService.name);
-    const token = jwt.sign({ email }, this.secret(), { expiresIn: '1h' });
+    const token = jwt.sign({ email }, this.tokenService.secret(UsersService), { expiresIn: '1h' });
     Logger.log('Token generated', UsersService.name);
     return token;
   }
@@ -86,7 +74,7 @@ export class UsersService {
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const decoded = jwt.verify(token, this.secret());
+      const decoded = jwt.verify(token, this.tokenService.secret(UsersService));
       Logger.log('Token verified', UsersService.name);
 
       // update the user's email verification status

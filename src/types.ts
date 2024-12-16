@@ -8,9 +8,14 @@ export interface Tokens {
     refreshToken: string;
 }
 
-export interface Payload {
+export interface RequestPayload {
     id: string;
     email: string;
     username: string;
     role: Role;
+}
+
+export interface ResponsePayload extends RequestPayload {
+    iat: number;
+    exp: number;
 }
