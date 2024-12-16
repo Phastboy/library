@@ -24,11 +24,14 @@ model User {
 
 model Address {
   id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  apartmentNumber  String
   street           String
   city             String
-  state            String
+  state            String?
   country          String
-  postalCode       String
+  postalCode       String?
+  longitude        Float?
+  latitude         Float?
   user             User    @relation(fields: [userId], references: [id])
   userId           String  @unique @map("user_id") @db.ObjectId
 

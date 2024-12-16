@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto} from './dto/update-auth.dto';
+import { CreateUserDto } from '../dto/user/create-user.dto';
+import { UpdateUserDto} from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
