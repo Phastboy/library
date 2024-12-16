@@ -15,8 +15,7 @@ model User {
   password          String
   country           String? @default("")
   countryCode       String? @default("")
-  state             String? @default("")
-  address           Address?
+  address           Address? 
   phoneNumber       String? @default("")
   emailIsVerified   Boolean @default(false)
   createdAt         DateTime @default(now())
