@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { CreateUserDto } from '../dto/user/create-user.dto';
+import { UpdateUserDto} from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -41,7 +41,7 @@ export class AuthService {
   async profile(id: string) {
     Logger.log('Received request to get profile', AuthService.name);
     try {
-      const profile = await this.userService.find(id);
+      const profile = await this.userService.findOne(id);
       return {
         message: 'Profile fetched successfully',
         data: profile,
@@ -52,22 +52,17 @@ export class AuthService {
     }
   }
 
-  findAll() {
-    return {
-      message: `This action returns all auth`,
-      details: `under development`,
-    };
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return updateAuthDto;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async updateProfile(id: string, updateUserDto: UpdateUserDto) {
+    Logger.log('Received request to update profile', AuthService.name);
+    try {
+      const profile = await this.userService.update(id, updateUserDto);
+      return {
+        message: 'Profile updated successfully',
+        data: profile,
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
+    }
   }
 }

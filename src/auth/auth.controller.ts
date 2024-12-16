@@ -8,10 +8,11 @@ import {
   Delete,
   Logger,
   Query,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { CreateUserDto } from '../dto/user/create-user.dto';
+import { UpdateUserDto } from '../dto/user/update-user.dto';
 
 @Controller('')
 export class AuthController {
@@ -43,32 +44,36 @@ export class AuthController {
   }
 
   @Get('/profile')
-  async profile(@Query('id') id: string) {
+  async profile(@Req() req) {
+    Logger.log('Received request to get profile', AuthController.name);
     try {
-      return await this.authService.profile(id);
+      Logger.log(`Fetching profile for user with id ${req.user.id}`, AuthController.name);
+      if (!req.user.id) {
+        Logger.error('User id is required', AuthController.name);
+        throw new Error('User id is required');
+      }
+      const profile = await this.authService.profile(req.user.id);
+      return profile;
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
     }
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Patch('update-profile')
+  async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
+    Logger.log('Received request to update profile', AuthController.name);
+    try {
+      Logger.log(`Updating profile for user with id ${req.user.id}`, AuthController.name);
+      if (!req.user.id) {
+        Logger.error('User id is required', AuthController.name);
+        throw new Error('User id is required');
+      }
+      const updated = await this.authService.updateProfile(req.user.id, updateUserDto);
+      return updated;
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
   }
 }
