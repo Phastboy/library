@@ -15,8 +15,24 @@ model User {
   password          String
   country           String? @default("")
   countryCode       String? @default("")
-  state             String? @default("")
-  address           String? @default("")
+  address           Address? 
   phoneNumber       String? @default("")
   emailIsVerified   Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Address {
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  street           String
+  city             String
+  state            String
+  country          String
+  postalCode       String
+  user             User    @relation(fields: [userId], references: [id])
+  userId           String  @unique @map("user_id") @db.ObjectId
+
+  @@map("addresses")
 }

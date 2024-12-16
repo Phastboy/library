@@ -13,7 +13,7 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 
-@Controller('api/auth')
+@Controller('')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -36,6 +36,16 @@ export class AuthController {
         throw new Error('Token are required');
       }
       return await this.authService.verifyEmail(token);
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
+  @Get('/profile')
+  async profile(@Query('id') id: string) {
+    try {
+      return await this.authService.profile(id);
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;

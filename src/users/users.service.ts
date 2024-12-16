@@ -108,7 +108,7 @@ export class UsersService {
 
   private generateVerificationLink(token: string): string {
     const baseUrl = process.env.API_URL || 'http://localhost:8080';
-    const url = new URL('/api/auth/verify-email', baseUrl);
+    const url = new URL('/verify-email', baseUrl);
     url.searchParams.set('token', token);
     Logger.log('Verification link:', url.toString());
     return url.toString();
@@ -156,6 +156,31 @@ export class UsersService {
     `);
 
     await this.sendEmail(email, subject, content);
+  }
+
+  async find(id: string){
+    Logger.log(`Finding user with id ${id}`, UsersService.name);
+    try {
+      Logger.log('Finding user...', UsersService.name);
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+      });
+      if (user === null) {
+        Logger.error('User not found', UsersService.name);
+        throw new BadRequestException('User not found');
+      }
+      Logger.log(`User found: ${user.email}`, UsersService.name);
+      return user;
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      // catch the error from user===null
+      if(error.message === 'User not found') {
+        Logger.error('User not found', UsersService.name);
+        throw new BadRequestException('User not found');
+      }
+      // catch other errors
+      throw new InternalServerErrorException('Error finding user');
+    }
   }
 
   async delete(id: string){

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { UsersService } from 'src/users/users.service';
@@ -31,6 +31,20 @@ export class AuthService {
           message: verified,
           details: 'You can now login to your account',
         }
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
+    }
+  }
+
+  async profile(id: string) {
+    Logger.log('Received request to get profile', AuthService.name);
+    try {
+      const profile = await this.userService.find(id);
+      return {
+        message: 'Profile fetched successfully',
+        data: profile,
       }
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
