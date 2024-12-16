@@ -6,6 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
+import { RequestPayload, ResponsePayload } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -45,24 +46,29 @@ export class UsersService {
     }
   }
 
-  async generateEmailVerificationToken(email: string, id: string) {
+  async generateEmailVerificationToken(payload: RequestPayload): Promise<string> {
     Logger.log('Received request to generate email verification token', UsersService.name);
-    // Check if the user exists
-    Logger.log('Checking if user exists...', UsersService.name);
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
-    if (!user) {
+    try {
+      // Check if the user exists
+      Logger.log('Checking if user exists...', UsersService.name);
+      const user = await this.prisma.user.findUnique({
+      where: { email: payload.email },
+      });
+      if (!user) {
       Logger.error('User not found', UsersService.name);
       throw new BadRequestException('User not found');
-    }
-    Logger.log('User found', UsersService.name);
+      }
+      Logger.log('User found', UsersService.name);
 
-    // Generate the token
-    Logger.log('Generating token...', UsersService.name);
-    const token = jwt.sign({ email }, this.tokenService.secret(UsersService), { expiresIn: '1h' });
-    Logger.log('Token generated', UsersService.name);
-    return token;
+      // Generate the token
+      Logger.log('Generating token...', UsersService.name);
+      const token = await this.tokenService.generate(payload, UsersService, '1h');
+      Logger.log('Token generated', UsersService.name);
+      return token;
+    } catch (error) {
+      Logger.error(error.message, error.stack, UsersService.name);
+      throw new InternalServerErrorException('Error generating email verification token');
+    }
   }
 
   async verifyEmailVerificationToken(token: string) {
@@ -74,18 +80,18 @@ export class UsersService {
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const decoded = jwt.verify(token, this.tokenService.secret(UsersService));
-      Logger.log('Token verified', UsersService.name);
+      const decoded = await this.tokenService.verify(token, UsersService);
+      Logger.log(`Token verified: ${decoded}`, UsersService.name);
 
       // update the user's email verification status
       Logger.log('Updating user email verification status...', UsersService.name);
-      const decodedToken = decoded as jwt.JwtPayload & { email: string };
-      Logger.log('Decoded token:', decodedToken, UsersService.name);
+      const data = decoded as jwt.JwtPayload & ResponsePayload;
+      Logger.log('Decoded token:', data, UsersService.name);
       await this.prisma.user.update({
-        where: { email: decodedToken.email },
+        where: { email: data.email },
         data: { emailIsVerified: true },
       });
-      return 'Email verified successfully';
+      return data;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       if(error.name === 'TokenExpiredError') {

@@ -19,9 +19,9 @@ export class TokenService {
         return secret;
     }
 
-    async generate(payload: RequestPayload, className: any): Promise<string> {
+    async generate(payload: RequestPayload, className: any, expiresIn: string): Promise<string> {
         const secret = this.secret(className);
-        return this.jwtService.sign(payload, { secret });
+        return this.jwtService.sign(payload, { secret, expiresIn });
     }
 
     async verify(token: string, className: any): Promise<ResponsePayload> {
