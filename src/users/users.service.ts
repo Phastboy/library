@@ -12,31 +12,40 @@ import { RequestPayload, ResponsePayload } from 'src/types';
 export class UsersService {
   constructor(private readonly prisma: PrismaService, private mailerService: MailerService, private tokenService: TokenService) {}
 
-  async userExists(email: string, username?: string) {
+  async userExists(email: string, className: any, username?: string) {
     Logger.log('Checking if user exists...', UsersService.name);
-    const user = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { username },
-        ],
-      },
-    });
-    if (user) {
-      Logger.log('User exists', UsersService.name);
-      return user;
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { email },
+            { username },
+          ],
+        },
+      });
+      if (user) {
+        Logger.log('User exists', className.name);
+        return user;
+      }
+      Logger.log('User does not exist', className.name);
+      throw new BadRequestException('User does not exist');
+    } finally {
+      Logger.log('completed checking if user exists', className.name);
     }
-    Logger.log('User does not exist', UsersService.name);
-    return false;
   }
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
     // Check if the email is already in use
     Logger.log('Checking if email is already in use...', UsersService.name);
-    if (await this.userExists(data.email)) {
-      Logger.error('Email is already in use', UsersService.name);
-      throw new BadRequestException('Email is already in use');
+    const user = await this.userExists(data.email, UsersService, data.username);
+    if (user && user.email === data.email) {
+      Logger.error('Email is already associated to an account', UsersService.name);
+      throw new BadRequestException('Email is already associated to an account');
+    }
+    if (user && user.username === data.username) {
+      Logger.error('Username is already associated to an account', UsersService.name);
+      throw new BadRequestException('Username is already associated to an account');
     }
     Logger.log('Email is not associated to any account', UsersService.name);
 
@@ -47,7 +56,7 @@ export class UsersService {
       const { password, ...result } = await this.prisma.user.create({
         data: {
           email: data.email,
-          username: data.username,
+          username: data.username || data.email.split('@')[0],
           password: hashedPassword,
         },
       });
