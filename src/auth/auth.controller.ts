@@ -15,6 +15,7 @@ import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
 import path from 'path';
+import { ApiBody, ApiCookieAuth, ApiQuery } from '@nestjs/swagger';
 
 @Controller('')
 export class AuthController {
@@ -30,6 +31,16 @@ export class AuthController {
   };
 
   @Post('register')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        username: { type: 'string', example: 'user123' },
+        password: { type: 'string', example: 'Pas$word123' },
+      },
+    },
+  })
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       const data = await this.authService.create(createUserDto);
@@ -41,6 +52,11 @@ export class AuthController {
   }
 
   @Get('verify-email')
+  @ApiQuery({
+    name: 'token',
+    type: 'string',
+    required: true,
+  })
   async verifyEmail(@Query('token') token: string) {
     Logger.log(`Received request to verify email with token ${token}`, AuthController.name);
     try {
@@ -55,6 +71,15 @@ export class AuthController {
   }
 
   @Post('/login')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'Pas$word123' },
+      },
+    },
+  })
   async login(@Body() loginDto: LoginDto, @Res() res: any) {
     Logger.log('Received request to login', AuthController.name);
     try {
@@ -117,6 +142,7 @@ export class AuthController {
 
   // refresh tokens(accessToken and refreshToken)
   @Post('refresh-tokens')
+  @ApiCookieAuth('refreshToken')
   async refreshTokens(@Req() req: any) {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
