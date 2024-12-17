@@ -13,6 +13,7 @@ export interface RequestPayload {
     email: string;
     username: string;
     role: Role;
+    emailIsVerified: boolean;
 }
 
 export interface ResponsePayload extends RequestPayload {

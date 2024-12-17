@@ -16,7 +16,7 @@ export class AuthService {
     Logger.log('registering user...', AuthService.name);
     const { email, username, role: prismaRole, id, ...others} = await this.userService.create(createUserDto);
     const role: Role = prismaRole as Role;
-    const payload: RequestPayload = { email, username, role, id };
+    const payload: RequestPayload = { email, username, role, id, emailIsVerified: false };
     const token = await this.userService.generateEmailVerificationToken(payload);
     const sendEmail = await this.userService.sendEmailVerificationEmail(email, token);
     return {
@@ -34,23 +34,22 @@ export class AuthService {
     Logger.log('Received request to login', AuthService.name);
     try {
       const user = await this.userService.userExists(data.email, AuthService);
-      if (!user) {
-        throw new BadRequestException('Invalid email');
-      }
       const isPasswordValid = await argon2.verify(user.password, data.password);
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid password');
       }
 
       // generate tokens
-      const payload: RequestPayload = { email: user.email, username: user.username, role: user.role as Role, id: user.id };
-      const tokens = async (): Promise<Tokens> => {
-        const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
-        const refreshToken = await this.tokenService.generate(payload, AuthService, '7d');
-        return { accessToken, refreshToken };
-      }
+      const payload: RequestPayload = { email: user.email, username: user.username, role: user.role as Role, id: user.id, emailIsVerified: user.emailIsVerified };
+      const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
+      const refreshToken = await this.tokenService.generate(payload, AuthService, '7d');
+
+      // persist refresh token with argon2 hash
+      const hashedRefreshToken = await argon2.hash(refreshToken);
+      await this.userService.update(user.id, {refreshToken: hashedRefreshToken});
+      Logger.log(`Login successful for user with email ${data.email}`, AuthService.name);
       
-      return await tokens();
+      return { accessToken, refreshToken };
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;

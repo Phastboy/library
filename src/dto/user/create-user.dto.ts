@@ -23,4 +23,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsBoolean()
   emailIsVerified?: boolean;
+
+  @IsOptional()
+  @IsString()
+  refreshToken?: string;
 }
