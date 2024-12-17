@@ -90,4 +90,41 @@ export class AuthController {
       throw error;
     }
   }
+
+  // refresh tokens(accessToken and refreshToken)
+  @Post('refresh-tokens')
+  async refreshTokens(@Req() req: any) {
+    Logger.log('Received request to refresh tokens', AuthController.name);
+    try {
+      Logger.log(`Refreshing tokens for user with id ${req.user.id}`, AuthController.name);
+      if (!req.user.id) {
+        Logger.error('User id is required', AuthController.name);
+        throw new Error('User id is required');
+      }
+      const tokens = await this.authService.refreshTokens(req.user.refreshToken);
+      return tokens;
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
+  @Post('logout')
+  async logout(@Req() req: any) {
+    Logger.log('Received request to logout', AuthController.name);
+    try {
+      Logger.log(`Logging out user with id ${req.user.id}`, AuthController.name);
+      if (!req.user.id) {
+        Logger.error('User id is required', AuthController.name);
+        throw new Error('User id is required');
+      }
+      await this.authService.logout(req.user.id);
+      return {
+        message: 'Logout successful',
+      };
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
 }

@@ -6,6 +6,7 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
+  @IsOptional()
   username: string;
 
   @IsStrongPassword()
@@ -22,4 +23,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsBoolean()
   emailIsVerified?: boolean;
+
+  @IsOptional()
+  @IsString()
+  refreshToken?: string;
 }
