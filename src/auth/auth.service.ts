@@ -123,4 +123,19 @@ export class AuthService {
       throw error;
     }
   }
+
+  async logout(refreshToken: string) {
+    Logger.log('Received request to logout', AuthService.name);
+    try {
+      const user = await this.userService.userExists(refreshToken, AuthService);
+      await this.userService.update(user.id, {refreshToken: null});
+      Logger.log(`Logout successful for user with email ${user.email}`, AuthService.name);
+      return {
+        message: 'Logout successful',
+      }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
+    }
+  }
 }
