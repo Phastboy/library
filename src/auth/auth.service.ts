@@ -17,7 +17,7 @@ export class AuthService {
     const role: Role = prismaRole as Role;
     const payload: RequestPayload = { email, username, role, id, emailIsVerified: false };
     const token = await this.userService.generateEmailVerificationToken(payload);
-    const sendEmail = await this.userService.sendEmailVerificationEmail(email, token);
+    await this.userService.sendEmailVerificationEmail(email, token);
     return {
       message: 'User registered successfully',
       data: {
@@ -76,7 +76,7 @@ export class AuthService {
     try {
       const profile = await this.userService.userExists(AuthService, { id });
       return {
-        message: 'Profile fetched successfully',
+        message: 'Profile retrieved successfully',
         data: profile,
       }
     } catch (error: any) {
@@ -99,24 +99,34 @@ export class AuthService {
     }
   }
 
-  // refresh tokens(accessToken and refreshToken)
   async refreshTokens(refreshToken: string): Promise<Tokens> {
     Logger.log('Received request to refresh tokens', AuthService.name);
     try {
-      const user = await this.userService.userExists(AuthService, {refreshToken});
+      // decode the refresh token and get the user
+      const decoded = await this.tokenService.verify(refreshToken, AuthService);
+      Logger.log(decoded, AuthService.name);
+      const user = await this.userService.userExists(AuthService, { email: decoded.email });
+      if(!user.refreshToken) {
+        throw new BadRequestException('Invalid refresh token');
+      }
 
-      const payload: RequestPayload = {
-        email: user.email,
-        username: user.username,
-        role: user.role as Role,
-        id: user.id,
-        emailIsVerified: user.emailIsVerified
-      };
+      // compare refresh token
+      const isRefreshTokenValid = await argon2.verify(user.refreshToken, refreshToken);
+
+      if (!isRefreshTokenValid) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      // generate new tokens
+      const payload: RequestPayload = { email: user.email, username: user.username, role: user.role as Role, id: user.id, emailIsVerified: user.emailIsVerified };
       const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
       const newRefreshToken = await this.tokenService.generate(payload, AuthService, '7d');
+
+      // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(newRefreshToken);
       await this.userService.update(user.id, {refreshToken: hashedRefreshToken});
-      Logger.log(`Tokens refreshed for user with email ${user.email}`, AuthService.name);
+      Logger.log(`Tokens refreshed successfully for user with email ${user.email}`, AuthService.name);
+
       return { accessToken, refreshToken: newRefreshToken };
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
@@ -124,10 +134,11 @@ export class AuthService {
     }
   }
 
-  async logout(refreshToken: string) {
+  async logout(accessToken: string) {
     Logger.log('Received request to logout', AuthService.name);
     try {
-      const user = await this.userService.userExists(AuthService, {refreshToken});
+      const decoded = await this.tokenService.verify(accessToken, AuthService);
+      const user = await this.userService.userExists(AuthService, { email: decoded.email });
       await this.userService.update(user.id, {refreshToken: null});
       Logger.log(`Logout successful for user with email ${user.email}`, AuthService.name);
       return {
