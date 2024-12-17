@@ -12,17 +12,31 @@ import { RequestPayload, ResponsePayload } from 'src/types';
 export class UsersService {
   constructor(private readonly prisma: PrismaService, private mailerService: MailerService, private tokenService: TokenService) {}
 
+  async userExists(email: string, username?: string) {
+    Logger.log('Checking if user exists...', UsersService.name);
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { username },
+        ],
+      },
+    });
+    if (user) {
+      Logger.log('User exists', UsersService.name);
+      return user;
+    }
+    Logger.log('User does not exist', UsersService.name);
+    return false;
+  }
+
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
     // Check if the email is already in use
     Logger.log('Checking if email is already in use...', UsersService.name);
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    Logger.log('Check complete', UsersService.name);
-    if (existingUser) {
-      Logger.error('Email already in use', UsersService.name);
-      throw new BadRequestException('The email address is already associated with an account.');
+    if (await this.userExists(data.email)) {
+      Logger.error('Email is already in use', UsersService.name);
+      throw new BadRequestException('Email is already in use');
     }
     Logger.log('Email is not associated to any account', UsersService.name);
 
@@ -171,26 +185,6 @@ export class UsersService {
       Logger.log('Finding user...', UsersService.name);
       const user = await this.prisma.user.findUnique({
         where: { id },
-      });
-      if (user === null) {
-        Logger.error('User not found', UsersService.name);
-        throw new BadRequestException('User not found');
-      }
-      Logger.log(`User found: ${user.email}`, UsersService.name);
-      return user;
-    } catch (error) {
-      Logger.error(error.message, error.stack, UsersService.name);
-      throw error;
-    }
-  }
-
-  // find user by email
-  async findByEmail(email: string){
-    Logger.log(`Finding user with email ${email}`, UsersService.name);
-    try {
-      Logger.log('Finding user...', UsersService.name);
-      const user = await this.prisma.user.findUnique({
-        where: { email },
       });
       if (user === null) {
         Logger.error('User not found', UsersService.name);

@@ -33,7 +33,7 @@ export class AuthService {
   async login(data: LoginDto) {
     Logger.log('Received request to login', AuthService.name);
     try {
-      const user = await this.userService.findByEmail(data.email);
+      const user = await this.userService.userExists(data.email);
       if (!user) {
         throw new BadRequestException('Invalid email');
       }
