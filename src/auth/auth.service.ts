@@ -17,7 +17,7 @@ export class AuthService {
     const role: Role = prismaRole as Role;
     const payload: RequestPayload = { email, username, role, id, emailIsVerified: false };
     const token = await this.userService.generateEmailVerificationToken(payload);
-    const sendEmail = await this.userService.sendEmailVerificationEmail(email, token);
+    await this.userService.sendEmailVerificationEmail(email, token);
     return {
       message: 'User registered successfully',
       data: {

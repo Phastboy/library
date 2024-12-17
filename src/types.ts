@@ -20,3 +20,9 @@ export interface ResponsePayload extends RequestPayload {
     iat: number;
     exp: number;
 }
+export interface UserCriteria {
+    email?: string;
+    username?: string;
+    refreshToken?: string;
+    id?: string;
+  }

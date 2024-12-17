@@ -6,11 +6,15 @@ import { RequestPayload, ResponsePayload } from 'src/types';
 export class TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
+  isProduction() {
+    return process.env.NODE_ENV === 'production';
+  }
+
     secret = (className: any) => {
         const secret = process.env.JWT_SECRET;
         if (!secret) {
           Logger.error('JWT secret is not set!', className.name);
-          if(process.env.NODE_ENV !== 'production') {
+          if(!this.isProduction()) {
             Logger.warn('Using default secret', className.name)
             return 'default-secret';
           }

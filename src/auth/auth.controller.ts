@@ -4,20 +4,30 @@ import {
   Post,
   Body,
   Patch,
-  Param,
-  Delete,
   Logger,
   Query,
   Req,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
+import { TokenService } from 'src/token/token.service';
+import path from 'path';
 
 @Controller('')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService,
+    private readonly tokenService: TokenService,
+  ) {}
+
+  private cookieOptions = {
+    httpOnly: true,
+    secure: this.tokenService.isProduction(),
+    sameSite: this.tokenService.isProduction() ? 'none' : 'lax',
+    path: '/',
+  };
 
   @Post('register')
   async create(@Body() createUserDto: CreateUserDto) {
@@ -45,12 +55,26 @@ export class AuthController {
   }
 
   @Post('/login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto, @Res() res: any) {
     Logger.log('Received request to login', AuthController.name);
     try {
-      const data = await this.authService.login(loginDto);
+      const { accessToken, refreshToken} = await this.authService.login(loginDto);
+
+      // set cookies
+      await res.cookie('accessToken', accessToken, {
+        ...this.cookieOptions,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+      await res.cookie('refreshToken', refreshToken, {
+        ...this.cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      Logger.log(`cookies set`, AuthController.name);
+
       Logger.log(`Login successful for user with email ${loginDto.email}`, AuthController.name);
-      return data;
+      return res.json({
+        message: 'Login successful',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;

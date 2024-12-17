@@ -6,13 +6,16 @@ import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { RequestPayload, ResponsePayload } from 'src/types';
+import { RequestPayload, ResponsePayload, UserCriteria } from 'src/types';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService, private mailerService: MailerService, private tokenService: TokenService) {}
+  constructor(private readonly prisma: PrismaService,
+    private mailerService: MailerService,
+    private tokenService: TokenService
+  ) {}
 
-  async userExists(className: any, criteria: { email?: string, username?: string, refreshToken?: string, id?: string }) {
+  async userExists(className: any, criteria: UserCriteria) {
     Logger.log(`Checking if user exists...`, className.name);
     try {
       // Filter out undefined fields
