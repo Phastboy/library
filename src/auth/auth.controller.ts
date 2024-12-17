@@ -156,43 +156,78 @@ export class AuthController {
     }
   }
 
-  @Post('refresh-tokens')
+  @Get('refresh-tokens')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiCookieAuth('refreshToken')
   @ApiResponse({ status: 200, description: 'Tokens refreshed successfully.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async refreshTokens(@Req() req: any) {
+  async refreshTokens(@Req() req: any, @Res() res: any) {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
-      Logger.log(`Refreshing tokens for user with id ${req.user.id}`, AuthController.name);
-      if (!req.user.id) {
-        Logger.error('User id is required', AuthController.name);
-        throw new Error('User id is required');
+      Logger.log(`Request headers: ${JSON.stringify(req.headers)}`, AuthController.name);
+      const cookies = req.headers?.cookie;
+      Logger.log(`cookies: ${JSON.stringify(cookies)}`, AuthController.name);
+
+      // extract refresh token from cookies
+      const refreshToken = cookies?.split(';').find((cookie: string) => cookie.trim().startsWith('refreshToken='))?.split('=')[1];
+      Logger.log(`refreshToken: ${refreshToken}`, AuthController.name);
+      if (!refreshToken) {
+        Logger.error('Refresh token not found', AuthController.name);
+        throw new Error('Refresh token not found');
       }
-      const tokens = await this.authService.refreshTokens(req.user.refreshToken);
-      return tokens;
+
+      // refresh tokens
+      const { accessToken, refreshToken: newRefreshToken } = await this.authService.refreshTokens(refreshToken);
+
+      // set cookies
+      await res.cookie('accessToken', accessToken, {
+        ...this.cookieOptions,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+      await res.cookie('refreshToken', refreshToken, {
+        ...this.cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      Logger.log(`cookies set`, AuthController.name);
+
+      return res.json({
+        message: 'Tokens refreshed successfully',
+      });     
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
     }
   }
 
-  @Post('logout')
+  @Get('logout')
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async logout(@Req() req: any) {
+  async logout(@Req() req: any, @Res() res: any) {
     Logger.log('Received request to logout', AuthController.name);
     try {
-      Logger.log(`Logging out user with id ${req.user.id}`, AuthController.name);
-      if (!req.user.id) {
-        Logger.error('User id is required', AuthController.name);
-        throw new Error('User id is required');
+      const cookies= req.headers?.cookie;
+      Logger.log(`cookies: ${JSON.stringify(cookies)}`, AuthController.name);
+
+      // extract refresh token from cookies
+      const accessToken = cookies?.split(';').find((cookie: string) => cookie.trim().startsWith('accessToken='))?.split('=')[1];
+      Logger.log(`refreshToken: ${accessToken}`, AuthController.name);
+      if (!accessToken) {
+        Logger.error('Refresh token not found', AuthController.name);
+        throw new Error('Refresh token not found');
       }
-      await this.authService.logout(req.user.id);
-      return {
+
+      // update user with null refresh token
+      await this.authService.logout(accessToken);
+
+      // clear cookies
+      await res.clearCookie('accessToken', this.cookieOptions);
+      await res.clearCookie('refreshToken', this.cookieOptions);
+      Logger.log(`cookies cleared`, AuthController.name);
+
+      return res.json({
         message: 'Logout successful',
-      };
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;

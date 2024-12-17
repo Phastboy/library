@@ -4,7 +4,7 @@ import { RequestPayload, ResponsePayload } from 'src/types';
 
 @Injectable()
 export class TokenService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private jwtService: JwtService) {}
 
   isProduction() {
     return process.env.NODE_ENV === 'production';
@@ -31,7 +31,9 @@ export class TokenService {
     async verify(token: string, className: any): Promise<ResponsePayload> {
         const secret = this.secret(className);
         try {
-            return this.jwtService.verify(token, { secret });
+            const data: ResponsePayload = this.jwtService.verify(token, { secret });
+            Logger.log(data, TokenService.name);
+            return data;
         } catch (error) {
             Logger.log('Invalid token', TokenService.name);
             throw new UnauthorizedException('Invalid token');
