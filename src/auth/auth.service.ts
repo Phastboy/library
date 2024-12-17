@@ -5,7 +5,6 @@ import { UsersService } from 'src/users/users.service';
 import { RequestPayload, Role, Tokens } from 'src/types';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import * as argon2 from 'argon2';
-import { generate } from 'rxjs';
 import { TokenService } from 'src/token/token.service';
 
 @Injectable()
@@ -75,7 +74,7 @@ export class AuthService {
   async profile(id: string) {
     Logger.log('Received request to get profile', AuthService.name);
     try {
-      const profile = await this.userService.findOne(id);
+      const profile = await this.userService.userExists(id, AuthService);
       return {
         message: 'Profile fetched successfully',
         data: profile,
@@ -94,6 +93,31 @@ export class AuthService {
         message: 'Profile updated successfully',
         data: profile,
       }
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthService.name);
+      throw error;
+    }
+  }
+
+  // refresh tokens(accessToken and refreshToken)
+  async refreshTokens(refreshToken: string): Promise<Tokens> {
+    Logger.log('Received request to refresh tokens', AuthService.name);
+    try {
+      const user = await this.userService.userExists(refreshToken, AuthService);
+
+      const payload: RequestPayload = {
+        email: user.email,
+        username: user.username,
+        role: user.role as Role,
+        id: user.id,
+        emailIsVerified: user.emailIsVerified
+      };
+      const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
+      const newRefreshToken = await this.tokenService.generate(payload, AuthService, '7d');
+      const hashedRefreshToken = await argon2.hash(newRefreshToken);
+      await this.userService.update(user.id, {refreshToken: hashedRefreshToken});
+      Logger.log(`Tokens refreshed for user with email ${user.email}`, AuthService.name);
+      return { accessToken, refreshToken: newRefreshToken };
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;

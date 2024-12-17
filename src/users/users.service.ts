@@ -12,7 +12,7 @@ import { RequestPayload, ResponsePayload } from 'src/types';
 export class UsersService {
   constructor(private readonly prisma: PrismaService, private mailerService: MailerService, private tokenService: TokenService) {}
 
-  async userExists(email: string, className: any, username?: string) {
+  async userExists(email: string, className: any, username?: string, refreshToken?: string, id?: string) {
     Logger.log('Checking if user exists...', UsersService.name);
     try {
       const user = await this.prisma.user.findFirst({
@@ -20,10 +20,12 @@ export class UsersService {
           OR: [
             { email },
             { username },
+            { refreshToken },
+            { id },
           ],
         },
       });
-      if (user) {
+      if (user && user!==null) {
         Logger.log('User exists', className.name);
         return user;
       }
@@ -182,25 +184,6 @@ export class UsersService {
       const users = await this.prisma.user.findMany();
       Logger.log(`Found ${users.length} users`, UsersService.name);
       return users;
-    } catch (error) {
-      Logger.error(error.message, error.stack, UsersService.name);
-      throw error;
-    }
-  }
-
-  async findOne(id: string){
-    Logger.log(`Finding user with id ${id}`, UsersService.name);
-    try {
-      Logger.log('Finding user...', UsersService.name);
-      const user = await this.prisma.user.findUnique({
-        where: { id },
-      });
-      if (user === null) {
-        Logger.error('User not found', UsersService.name);
-        throw new BadRequestException('User not found');
-      }
-      Logger.log(`User found: ${user.email}`, UsersService.name);
-      return user;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw error;
