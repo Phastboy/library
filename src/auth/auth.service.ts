@@ -76,7 +76,7 @@ export class AuthService {
     try {
       const profile = await this.userService.userExists(AuthService, { id });
       return {
-        message: 'Profile fetched successfully',
+        message: 'Profile retrieved successfully',
         data: profile,
       }
     } catch (error: any) {

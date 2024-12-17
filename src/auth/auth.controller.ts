@@ -15,8 +15,9 @@ import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
 import path from 'path';
-import { ApiBody, ApiCookieAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('')
 export class AuthController {
   constructor(private readonly authService: AuthService,
@@ -31,6 +32,7 @@ export class AuthController {
   };
 
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -41,6 +43,8 @@ export class AuthController {
       },
     },
   })
+  @ApiResponse({ status: 201, description: 'User successfully registered.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       const data = await this.authService.create(createUserDto);
@@ -52,16 +56,19 @@ export class AuthController {
   }
 
   @Get('verify-email')
+  @ApiOperation({ summary: 'Verify email address' })
   @ApiQuery({
     name: 'token',
     type: 'string',
     required: true,
   })
+  @ApiResponse({ status: 200, description: 'Email successfully verified.' })
+  @ApiResponse({ status: 400, description: 'Invalid token.' })
   async verifyEmail(@Query('token') token: string) {
     Logger.log(`Received request to verify email with token ${token}`, AuthController.name);
     try {
       if (!token) {
-        throw new Error('Token are required');
+        throw new Error('Token is required');
       }
       return await this.authService.verifyEmail(token);
     } catch (error: any) {
@@ -71,6 +78,7 @@ export class AuthController {
   }
 
   @Post('/login')
+  @ApiOperation({ summary: 'Login user' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -80,6 +88,8 @@ export class AuthController {
       },
     },
   })
+  @ApiResponse({ status: 200, description: 'Login successful.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async login(@Body() loginDto: LoginDto, @Res() res: any) {
     Logger.log('Received request to login', AuthController.name);
     try {
@@ -107,6 +117,9 @@ export class AuthController {
   }
 
   @Get('/profile')
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async profile(@Req() req) {
     Logger.log('Received request to get profile', AuthController.name);
     try {
@@ -124,6 +137,9 @@ export class AuthController {
   }
 
   @Patch('update-profile')
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
     Logger.log('Received request to update profile', AuthController.name);
     try {
@@ -140,9 +156,11 @@ export class AuthController {
     }
   }
 
-  // refresh tokens(accessToken and refreshToken)
   @Post('refresh-tokens')
+  @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiCookieAuth('refreshToken')
+  @ApiResponse({ status: 200, description: 'Tokens refreshed successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async refreshTokens(@Req() req: any) {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
@@ -160,6 +178,9 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logout successful.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async logout(@Req() req: any) {
     Logger.log('Received request to logout', AuthController.name);
     try {
