@@ -2,13 +2,15 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto} from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
-import { RequestPayload, Role } from 'src/types';
+import { RequestPayload, Role, Tokens } from 'src/types';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import * as argon2 from 'argon2';
+import { generate } from 'rxjs';
+import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private userService: UsersService) {}
+  constructor(private userService: UsersService, private tokenService: TokenService) {}
 
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
@@ -39,11 +41,16 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid password');
       }
-      const { password, ...result } = user;
-      return {
-        message: 'Login successful',
-        data: result,
+
+      // generate tokens
+      const payload: RequestPayload = { email: user.email, username: user.username, role: user.role as Role, id: user.id };
+      const tokens = async (): Promise<Tokens> => {
+        const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
+        const refreshToken = await this.tokenService.generate(payload, AuthService, '7d');
+        return { accessToken, refreshToken };
       }
+      
+      return await tokens();
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;
