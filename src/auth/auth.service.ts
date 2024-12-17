@@ -32,7 +32,7 @@ export class AuthService {
   async login(data: LoginDto) {
     Logger.log('Received request to login', AuthService.name);
     try {
-      const user = await this.userService.userExists(data.email, AuthService);
+      const user = await this.userService.userExists(AuthService, { email: data.email });
       const isPasswordValid = await argon2.verify(user.password, data.password);
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid password');
@@ -74,7 +74,7 @@ export class AuthService {
   async profile(id: string) {
     Logger.log('Received request to get profile', AuthService.name);
     try {
-      const profile = await this.userService.userExists(id, AuthService);
+      const profile = await this.userService.userExists(AuthService, { id });
       return {
         message: 'Profile fetched successfully',
         data: profile,
@@ -103,7 +103,7 @@ export class AuthService {
   async refreshTokens(refreshToken: string): Promise<Tokens> {
     Logger.log('Received request to refresh tokens', AuthService.name);
     try {
-      const user = await this.userService.userExists(refreshToken, AuthService);
+      const user = await this.userService.userExists(AuthService, {refreshToken});
 
       const payload: RequestPayload = {
         email: user.email,
@@ -127,7 +127,7 @@ export class AuthService {
   async logout(refreshToken: string) {
     Logger.log('Received request to logout', AuthService.name);
     try {
-      const user = await this.userService.userExists(refreshToken, AuthService);
+      const user = await this.userService.userExists(AuthService, {refreshToken});
       await this.userService.update(user.id, {refreshToken: null});
       Logger.log(`Logout successful for user with email ${user.email}`, AuthService.name);
       return {

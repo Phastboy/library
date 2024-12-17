@@ -12,20 +12,23 @@ import { RequestPayload, ResponsePayload } from 'src/types';
 export class UsersService {
   constructor(private readonly prisma: PrismaService, private mailerService: MailerService, private tokenService: TokenService) {}
 
-  async userExists(email: string, className: any, username?: string, refreshToken?: string, id?: string) {
-    Logger.log('Checking if user exists...', UsersService.name);
+  async userExists(className: any, criteria: { email?: string, username?: string, refreshToken?: string, id?: string }) {
+    Logger.log(`Checking if user exists...`, className.name);
     try {
-      const user = await this.prisma.user.findFirst({
-        where: {
-          OR: [
-            { email },
-            { username },
-            { refreshToken },
-            { id },
-          ],
-        },
-      });
-      if (user && user!==null) {
+      // Filter out undefined fields
+      const whereCriteria = {
+        OR: Object.entries(criteria)
+          .filter(([_, value]) => value !== undefined)
+          .map(([key, value]) => ({ [key]: value })),
+      };
+      Logger.log('Where condition:', whereCriteria, className.name);
+      if (!whereCriteria.OR.length) {
+        Logger.error('Invalid criteria', className.name);
+        throw new BadRequestException('Invalid criteria');
+      }
+
+      const user = await this.prisma.user.findFirst({ where: whereCriteria });
+      if (user) {
         Logger.log('User exists', className.name);
         return user;
       }
@@ -40,7 +43,7 @@ export class UsersService {
     Logger.log('Received request to create user', UsersService.name);
     // Check if the email is already in use
     Logger.log('Checking if email is already in use...', UsersService.name);
-    const user = await this.userExists(data.email, UsersService, data.username);
+    const user = await this.userExists(UsersService, { email: data.email });
     if (user && user.email === data.email) {
       Logger.error('Email is already associated to an account', UsersService.name);
       throw new BadRequestException('Email is already associated to an account');
