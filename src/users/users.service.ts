@@ -44,32 +44,39 @@ export class UsersService {
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
-    // Check if the email is already in use
-    Logger.log('Checking if email is already in use...', UsersService.name);
-    const user = await this.userExists(UsersService, { email: data.email });
-    if (user && user.email === data.email) {
-      Logger.error('Email is already associated to an account', UsersService.name);
-      throw new BadRequestException('Email is already associated to an account');
+  
+    // Check for email and username
+    Logger.log('Checking for email or username conflicts...', UsersService.name);
+    const username = data.username || `${data.email.split('@')[0]}_${Date.now()}`;
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: data.email }, { username }],
+      },
+    });
+  
+    if (existingUser) {
+      if (existingUser.email === data.email) {
+        Logger.error('Email is already associated to an account', UsersService.name);
+        throw new BadRequestException('Email is already associated to an account');
+      }
+      if (existingUser.username === data.username) {
+        Logger.error('Username is already associated to an account', UsersService.name);
+        throw new BadRequestException('Username is already associated to an account');
+      }
     }
-    if (user && user.username === data.username) {
-      Logger.error('Username is already associated to an account', UsersService.name);
-      throw new BadRequestException('Username is already associated to an account');
-    }
-    Logger.log('Email is not associated to any account', UsersService.name);
-
-    // Hash the password and Create the user
+  
+    // Hash the password and create the user
     const hashedPassword = await argon2.hash(data.password);
     try {
-      Logger.log('Creating user...', UsersService.name);
       const { password, ...result } = await this.prisma.user.create({
         data: {
           email: data.email,
-          username: data.username || data.email.split('@')[0],
+          username,
           password: hashedPassword,
         },
       });
       Logger.log('User created successfully', UsersService.name);
-
+  
       return result;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
