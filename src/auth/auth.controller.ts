@@ -33,16 +33,6 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        username: { type: 'string', example: 'user123' },
-        password: { type: 'string', example: 'Pas$word123' },
-      },
-    },
-  })
   @ApiResponse({ status: 201, description: 'User successfully registered.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   async create(@Body() createUserDto: CreateUserDto) {
@@ -79,15 +69,6 @@ export class AuthController {
 
   @Post('/login')
   @ApiOperation({ summary: 'Login user' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        password: { type: 'string', example: 'Pas$word123' },
-      },
-    },
-  })
   @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async login(@Body() loginDto: LoginDto, @Res() res: any) {
