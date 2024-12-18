@@ -11,12 +11,35 @@ model User {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   email             String  @unique
   username          String  @unique
-  role              String  @default("user")
+  role              Role   @default(user)
   password          String
-  country           String? @default("")
-  countryCode       String? @default("")
-  state             String? @default("")
-  address           String? @default("")
+  address           Address? 
   phoneNumber       String? @default("")
   emailIsVerified   Boolean @default(false)
+  refreshToken     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Address {
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  apartmentNumber  String
+  street           String
+  city             String
+  state            String?
+  country          String
+  postalCode       String?
+  longitude        Float?
+  latitude         Float?
+  user             User    @relation(fields: [userId], references: [id])
+  userId           String  @unique @map("user_id") @db.ObjectId
+
+  @@map("addresses")
+}
+
+enum Role {
+  user
+  admin
 }

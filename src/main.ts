@@ -12,13 +12,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor())
 
   const config = new DocumentBuilder()
-    .setTitle('Libriary API')
+    .setTitle('Library API')
     .setDescription('Documentation for the Library API')
     .setVersion('0.0.1')
     .addTag('library')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/api/docs', app, document);
+  SwaggerModule.setup('/docs', app, document);
 
   await app.listen(port);
   Logger.log(`app is listening at ${port}`, 'app');
