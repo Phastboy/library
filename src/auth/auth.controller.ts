@@ -14,10 +14,9 @@ import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
-import path from 'path';
-import { ApiBody, ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {  ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('auth')
+@ApiTags('authentication')
 @Controller('')
 export class AuthController {
   constructor(private readonly authService: AuthService,
