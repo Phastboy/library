@@ -96,46 +96,6 @@ export class AuthController {
     }
   }
 
-  @Get('/profile')
-  @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async profile(@Req() req) {
-    Logger.log('Received request to get profile', AuthController.name);
-    try {
-      Logger.log(`Fetching profile for user with id ${req.user.id}`, AuthController.name);
-      if (!req.user.id) {
-        Logger.error('User id is required', AuthController.name);
-        throw new Error('User id is required');
-      }
-      const profile = await this.authService.profile(req.user.id);
-      return profile;
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthController.name);
-      throw error;
-    }
-  }
-
-  @Patch('update-profile')
-  @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
-  @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
-    Logger.log('Received request to update profile', AuthController.name);
-    try {
-      Logger.log(`Updating profile for user with id ${req.user.id}`, AuthController.name);
-      if (!req.user.id) {
-        Logger.error('User id is required', AuthController.name);
-        throw new Error('User id is required');
-      }
-      const updated = await this.authService.updateProfile(req.user.id, updateUserDto);
-      return updated;
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthController.name);
-      throw error;
-    }
-  }
-
   @Get('refresh-tokens')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiCookieAuth('refreshToken')

@@ -1,26 +1,37 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProfileDto } from '../dto/profile/create-profile.dto';
+import { Injectable, Logger } from '@nestjs/common';
 import { UpdateProfileDto } from '../dto/profile/update-profile.dto';
+import { UsersService } from 'src/users/users.service';
+import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 
 @Injectable()
 export class ProfileService {
-  create(createProfileDto: CreateProfileDto) {
-    return 'This action adds a new profile';
-  }
+  constructor(private readonly userService: UsersService) {}
 
-  findAll() {
-    return `This action returns all profile`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} profile`;
-  }
-
-  update(id: number, updateProfileDto: UpdateProfileDto) {
-    return `This action updates a #${id} profile`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} profile`;
-  }
+    async profile(id: string) {
+      Logger.log('Received request to get profile', ProfileService.name);
+      try {
+        const profile = await this.userService.userExists(ProfileService, { id });
+        return {
+          message: 'Profile retrieved successfully',
+          data: profile,
+        }
+      } catch (error: any) {
+        Logger.error(error.message, error.stack, ProfileService.name);
+        throw error;
+      }
+    }
+    
+    async updateProfile(id: string, updateUserDto: UpdateUserDto) {
+        Logger.log('Received request to update profile', ProfileService.name);
+        try {
+          const profile = await this.userService.update(id, updateUserDto);
+          return {
+            message: 'Profile updated successfully',
+            data: profile,
+          }
+        } catch (error: any) {
+          Logger.error(error.message, error.stack, ProfileService.name);
+          throw error;
+        }
+    }
 }

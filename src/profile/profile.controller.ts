@@ -1,34 +1,53 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Logger } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { CreateProfileDto } from '../dto/profile/create-profile.dto';
 import { UpdateProfileDto } from '../dto/profile/update-profile.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 
+@ApiTags('profile')
 @Controller('profile')
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+    constructor(private readonly profileService: ProfileService) {}
 
-  @Post()
-  create(@Body() createProfileDto: CreateProfileDto) {
-    return this.profileService.create(createProfileDto);
-  }
+    @Post()
+    @Get('/profile')
+    @ApiOperation({ summary: 'Get user profile' })
+    @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized.' })
+    async profile(@Req() req) {
+      Logger.log('Received request to get profile', ProfileController.name);
+      try {
+        Logger.log(`Fetching profile for user with id ${req.user.id}`, ProfileController.name);
+        if (!req.user.id) {
+          Logger.error('User id is required', ProfileController.name);
+          throw new Error('User id is required');
+        }
+        const profile = await this.profileService.profile(req.user.id);
+        return profile;
+      } catch (error: any) {
+        Logger.error(error.message, error.stack, ProfileController.name);
+        throw error;
+      }
+    }
 
-  @Get()
-  findAll() {
-    return this.profileService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.profileService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.profileService.update(+id, updateProfileDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.profileService.remove(+id);
-  }
+    @Patch('update-profile')
+    @ApiOperation({ summary: 'Update user profile' })
+    @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
+    @ApiResponse({ status: 400, description: 'Bad Request.' })
+    async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
+        Logger.log('Received request to update profile', ProfileController.name);
+        try {
+        Logger.log(`Updating profile for user with id ${req.user.id}`, ProfileController.name);
+        if (!req.user.id) {
+            Logger.error('User id is required', ProfileController.name);
+            throw new Error('User id is required');
+        }
+            const updated = await this.profileService.updateProfile(req.user.id, updateUserDto);
+            return updated;
+        } catch (error: any) {
+          Logger.error(error.message, error.stack, ProfileController.name);
+            throw error;
+        }
+    }
 }
