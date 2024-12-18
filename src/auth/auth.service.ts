@@ -33,6 +33,9 @@ export class AuthService {
     Logger.log('Received request to login', AuthService.name);
     try {
       const user = await this.userService.userExists(AuthService, { email: data.email });
+      if (!user) {
+        throw new BadRequestException('Invalid email');
+      }
       const isPasswordValid = await argon2.verify(user.password, data.password);
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid password');
@@ -64,34 +67,6 @@ export class AuthService {
           message: 'Email verified successfully',
           data,
         }
-      }
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthService.name);
-      throw error;
-    }
-  }
-
-  async profile(id: string) {
-    Logger.log('Received request to get profile', AuthService.name);
-    try {
-      const profile = await this.userService.userExists(AuthService, { id });
-      return {
-        message: 'Profile retrieved successfully',
-        data: profile,
-      }
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthService.name);
-      throw error;
-    }
-  }
-
-  async updateProfile(id: string, updateUserDto: UpdateUserDto) {
-    Logger.log('Received request to update profile', AuthService.name);
-    try {
-      const profile = await this.userService.update(id, updateUserDto);
-      return {
-        message: 'Profile updated successfully',
-        data: profile,
       }
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
