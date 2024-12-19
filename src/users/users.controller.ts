@@ -24,7 +24,11 @@ export class UsersController {
     async findOne(@Param('id') id: string) {
         Logger.log(`Finding user with id ${id}`, UsersController.name);
         try {
-            const data = await this.usersService.userExists(UsersController, { id });
+            const data = await this.usersService.find(UsersController, { id });
+            if (!data) {
+                throw new Error('User not found');
+            }
+            
             return {
                 message: 'User fetched successfully',
                 data,

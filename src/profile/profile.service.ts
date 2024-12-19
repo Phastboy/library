@@ -10,7 +10,7 @@ export class ProfileService {
     async profile(id: string) {
       Logger.log('Received request to get profile', ProfileService.name);
       try {
-        const profile = await this.userService.userExists(ProfileService, { id });
+        const profile = await this.userService.find(ProfileService, { id });
         return {
           message: 'Profile retrieved successfully',
           data: profile,

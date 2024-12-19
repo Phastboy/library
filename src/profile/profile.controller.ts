@@ -18,6 +18,7 @@ export class ProfileController {
     async profile(@Req() req) {
       Logger.log('Received request to get profile', ProfileController.name);
       try {
+        Logger.log(req.user, ProfileController.name);
         Logger.log(`Fetching profile for user with id ${req.user.id}`, ProfileController.name);
         if (!req.user.id) {
           Logger.error('User id is required', ProfileController.name);

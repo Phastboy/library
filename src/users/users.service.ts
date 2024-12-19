@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { RequestPayload, ResponsePayload, UserCriteria } from 'src/types';
+import { User, ResponsePayload, UserCriteria } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -15,9 +15,8 @@ export class UsersService {
     private tokenService: TokenService
   ) {}
 
-  async userExists(className: any, criteria: UserCriteria) {
-    Logger.log(`Checking if user exists...`, className.name);
-    try {
+    async find(className: any, criteria: UserCriteria) {
+      Logger.log(`finding user...`, className.name);
       // Filter out undefined fields
       const whereCriteria = {
         OR: Object.entries(criteria)
@@ -32,15 +31,12 @@ export class UsersService {
 
       const user = await this.prisma.user.findFirst({ where: whereCriteria });
       if (user) {
-        Logger.log('User exists', className.name);
+        Logger.log('User found', className.name);
         return user;
       }
-      Logger.log('User does not exist', className.name);
-      throw new BadRequestException('User does not exist');
-    } finally {
-      Logger.log('completed checking if user exists', className.name);
+      Logger.log('User not found', className.name);
+      return null;
     }
-  }
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
@@ -48,21 +44,14 @@ export class UsersService {
     // Check for email and username
     Logger.log('Checking for email or username conflicts...', UsersService.name);
     const username = data.username || `${data.email.split('@')[0]}_${Date.now()}`;
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email: data.email }, { username }],
-      },
-    });
-  
-    if (existingUser) {
-      if (existingUser.email === data.email) {
-        Logger.error('Email is already associated to an account', UsersService.name);
-        throw new BadRequestException('Email is already associated to an account');
-      }
-      if (existingUser.username === data.username) {
-        Logger.error('Username is already associated to an account', UsersService.name);
-        throw new BadRequestException('Username is already associated to an account');
-      }
+    const user= await this.find(UsersService, { email: data.email, username });
+    if (user && user.email === data.email) {
+      Logger.error('Email already exists', UsersService.name);
+      throw new BadRequestException('Email already exists');
+    }
+    if (user && user.username === username) {
+      Logger.error('Username already exists', UsersService.name);
+      throw new BadRequestException('Username already exists');
     }
   
     // Hash the password and create the user
@@ -77,14 +66,14 @@ export class UsersService {
       });
       Logger.log('User created successfully', UsersService.name);
   
-      return result;
+      return result as User;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw new BadRequestException('Error creating user');
     }
   }
 
-  async generateEmailVerificationToken(payload: RequestPayload): Promise<string> {
+  async generateEmailVerificationToken(payload: User): Promise<string> {
     Logger.log('Received request to generate email verification token', UsersService.name);
     try {
       // Check if the user exists
