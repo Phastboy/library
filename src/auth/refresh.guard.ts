@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { TokenService } from 'src/token/token.service';
 import { UsersService } from 'src/users/users.service';
@@ -13,7 +13,7 @@ export class RefreshGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.tokenService.extractTokenFromCookie(request.headers?.cookie, 'refreshToken');
     if (!token) {
-      throw new Error('No token found in request headers');
+      throw new UnauthorizedException('Refresh token not found');
     }
 
     try {

@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
@@ -13,7 +13,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.tokenService.extractTokenFromCookie(request.headers?.cookie, 'accessToken')
     if (!token) {
-      throw new Error('No token found in request headers');
+      throw new UnauthorizedException('Access token not found');
     }
 
     try {

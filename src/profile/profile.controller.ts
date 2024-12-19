@@ -1,7 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Logger, UseGuards } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Delete, Req, Logger, UseGuards } from '@nestjs/common';
 import { ProfileService } from './profile.service';
-import { CreateProfileDto } from '../dto/profile/create-profile.dto';
-import { UpdateProfileDto } from '../dto/profile/update-profile.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -25,7 +23,7 @@ export class ProfileController {
           Logger.error('User id is required', ProfileController.name);
           throw new Error('User id is required');
         }
-        const profile = await this.profileService.profile(req.userId);
+        const profile = await this.profileService.read(req.userId);
         return profile;
       } catch (error: any) {
         Logger.error(error.message, error.stack, ProfileController.name);
@@ -46,11 +44,17 @@ export class ProfileController {
             throw new Error('User id is required');
         }
             const id= req.userId;
-            const updated = await this.profileService.updateProfile(id, updateUserDto);
+            const updated = await this.profileService.update(id, updateUserDto);
             return updated;
         } catch (error: any) {
           Logger.error(error.message, error.stack, ProfileController.name);
             throw error;
         }
+    }
+
+    @Delete('delete-profile')
+    async delete(@Req() req: any) { 
+      const id=req.userId;
+      return await this.profileService.delete(id)
     }
 }
