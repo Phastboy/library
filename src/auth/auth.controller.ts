@@ -26,21 +26,29 @@ export class AuthController {
     private readonly tokenService: TokenService,
   ) {}
 
-  private cookieOptions = {
-    httpOnly: true,
-    secure: this.tokenService.isProduction(),
-    sameSite: this.tokenService.isProduction() ? 'none' : 'lax',
-    path: '/',
-  };
-
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully registered.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDto: CreateUserDto, @Res() res: any) {
     try {
       const data = await this.authService.create(createUserDto);
-      return data;
+      const { accessToken, refreshToken} = await this.tokenService.authTokens(data, AuthController);
+
+      // set cookies
+      await res.cookie('accessToken', accessToken, {
+        ...this.authService.cookieOptions,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+      await res.cookie('refreshToken', refreshToken, {
+        ...this.authService.cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      Logger.log(`cookies set`, AuthController.name);
+
+      return res.json({
+        message: 'Registration successful',
+      })
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -80,11 +88,11 @@ export class AuthController {
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
-        ...this.cookieOptions,
+        ...this.authService.cookieOptions,
         maxAge: 24 * 60 * 60 * 1000,
       });
       await res.cookie('refreshToken', refreshToken, {
-        ...this.cookieOptions,
+        ...this.authService.cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       Logger.log(`cookies set`, AuthController.name);
@@ -117,11 +125,11 @@ export class AuthController {
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
-        ...this.cookieOptions,
+        ...this.authService.cookieOptions,
         maxAge: 24 * 60 * 60 * 1000,
       });
       await res.cookie('refreshToken', refreshToken, {
-        ...this.cookieOptions,
+        ...this.authService.cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       Logger.log(`cookies set`, AuthController.name);
@@ -158,8 +166,8 @@ export class AuthController {
       await this.authService.logout(accessToken);
 
       // clear cookies
-      await res.clearCookie('accessToken', this.cookieOptions);
-      await res.clearCookie('refreshToken', this.cookieOptions);
+      await res.clearCookie('accessToken', this.authService.cookieOptions);
+      await res.clearCookie('refreshToken', this.authService.cookieOptions);
       Logger.log(`cookies cleared`, AuthController.name);
 
       return res.json({
