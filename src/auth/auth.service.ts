@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto} from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
-import { RequestPayload, Role, Tokens } from 'src/types';
+import { User, Role, Tokens } from 'src/types';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import * as argon2 from 'argon2';
 import { TokenService } from 'src/token/token.service';
@@ -13,18 +13,12 @@ export class AuthService {
 
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
-    const { email, username, role: prismaRole, id, ...others} = await this.userService.create(createUserDto);
-    const role: Role = prismaRole as Role;
-    const payload: RequestPayload = { email, username, role, id, emailIsVerified: false };
+    const payload = await this.userService.create(createUserDto);
     const token = await this.userService.generateEmailVerificationToken(payload);
-    await this.userService.sendEmailVerificationEmail(email, token);
+    await this.userService.sendEmailVerificationEmail(payload.email, token);
     return {
       message: 'User registered successfully',
-      data: {
-        email,
-        username,
-        role,
-      }
+      data: payload,
     }
   }
 
@@ -32,19 +26,18 @@ export class AuthService {
   async login(data: LoginDto) {
     Logger.log('Received request to login', AuthService.name);
     try {
-      const user = await this.userService.userExists(AuthService, { email: data.email });
+      const {password, ...user} = await this.userService.find(AuthService, { email: data.email });
       if (!user) {
         throw new BadRequestException('Invalid email');
       }
-      const isPasswordValid = await argon2.verify(user.password, data.password);
+      const isPasswordValid = await argon2.verify(password, data.password);
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid password');
       }
 
       // generate tokens
-      const payload: RequestPayload = { email: user.email, username: user.username, role: user.role as Role, id: user.id, emailIsVerified: user.emailIsVerified };
-      const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
-      const refreshToken = await this.tokenService.generate(payload, AuthService, '7d');
+      const accessToken = await this.tokenService.generate(user as User, AuthService, '24h');
+      const refreshToken = await this.tokenService.generate(user as User, AuthService, '7d');
 
       // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(refreshToken);
@@ -80,9 +73,9 @@ export class AuthService {
       // decode the refresh token and get the user
       const decoded = await this.tokenService.verify(refreshToken, AuthService);
       Logger.log(decoded, AuthService.name);
-      const user = await this.userService.userExists(AuthService, { email: decoded.email });
+      const {password, ...user} = await this.userService.find(AuthService, { email: decoded.email });
       if(!user.refreshToken) {
-        throw new BadRequestException('Invalid refresh token');
+        throw new BadRequestException('Invalid user');
       }
 
       // compare refresh token
@@ -93,9 +86,8 @@ export class AuthService {
       }
 
       // generate new tokens
-      const payload: RequestPayload = { email: user.email, username: user.username, role: user.role as Role, id: user.id, emailIsVerified: user.emailIsVerified };
-      const accessToken = await this.tokenService.generate(payload, AuthService, '24h');
-      const newRefreshToken = await this.tokenService.generate(payload, AuthService, '7d');
+      const accessToken = await this.tokenService.generate(user as User, AuthService, '24h');
+      const newRefreshToken = await this.tokenService.generate(user as User, AuthService, '7d');
 
       // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(newRefreshToken);
@@ -113,7 +105,10 @@ export class AuthService {
     Logger.log('Received request to logout', AuthService.name);
     try {
       const decoded = await this.tokenService.verify(accessToken, AuthService);
-      const user = await this.userService.userExists(AuthService, { email: decoded.email });
+      const user = await this.userService.find(AuthService, { email: decoded.email });
+      if(!user) {
+        throw new BadRequestException('Invalid user');
+      }
       await this.userService.update(user.id, {refreshToken: null});
       Logger.log(`Logout successful for user with email ${user.email}`, AuthService.name);
       return {
