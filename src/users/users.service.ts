@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { RequestPayload, ResponsePayload, UserCriteria } from 'src/types';
+import { User, Payload, UserCriteria } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -15,9 +15,8 @@ export class UsersService {
     private tokenService: TokenService
   ) {}
 
-  async userExists(className: any, criteria: UserCriteria) {
-    Logger.log(`Checking if user exists...`, className.name);
-    try {
+    async find(className: any, criteria: UserCriteria) {
+      Logger.log(`finding user...`, className.name);
       // Filter out undefined fields
       const whereCriteria = {
         OR: Object.entries(criteria)
@@ -32,52 +31,49 @@ export class UsersService {
 
       const user = await this.prisma.user.findFirst({ where: whereCriteria });
       if (user) {
-        Logger.log('User exists', className.name);
+        Logger.log('User found', className.name);
         return user;
       }
-      Logger.log('User does not exist', className.name);
-      throw new BadRequestException('User does not exist');
-    } finally {
-      Logger.log('completed checking if user exists', className.name);
+      Logger.log('User not found', className.name);
+      return null;
     }
-  }
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
-    // Check if the email is already in use
-    Logger.log('Checking if email is already in use...', UsersService.name);
-    const user = await this.userExists(UsersService, { email: data.email });
+  
+    // Check for email and username
+    Logger.log('Checking for email or username conflicts...', UsersService.name);
+    const username = data.username || `${data.email.split('@')[0]}_${Date.now()}`;
+    const user= await this.find(UsersService, { email: data.email, username });
     if (user && user.email === data.email) {
-      Logger.error('Email is already associated to an account', UsersService.name);
-      throw new BadRequestException('Email is already associated to an account');
+      Logger.error('Email already exists', UsersService.name);
+      throw new BadRequestException('Email already exists');
     }
-    if (user && user.username === data.username) {
-      Logger.error('Username is already associated to an account', UsersService.name);
-      throw new BadRequestException('Username is already associated to an account');
+    if (user && user.username === username) {
+      Logger.error('Username already exists', UsersService.name);
+      throw new BadRequestException('Username already exists');
     }
-    Logger.log('Email is not associated to any account', UsersService.name);
-
-    // Hash the password and Create the user
+  
+    // Hash the password and create the user
     const hashedPassword = await argon2.hash(data.password);
     try {
-      Logger.log('Creating user...', UsersService.name);
       const { password, ...result } = await this.prisma.user.create({
         data: {
           email: data.email,
-          username: data.username || data.email.split('@')[0],
+          username,
           password: hashedPassword,
         },
       });
       Logger.log('User created successfully', UsersService.name);
-
-      return result;
+  
+      return result as User;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw new BadRequestException('Error creating user');
     }
   }
 
-  async generateEmailVerificationToken(payload: RequestPayload): Promise<string> {
+  async generateEmailVerificationToken(payload: User): Promise<string> {
     Logger.log('Received request to generate email verification token', UsersService.name);
     try {
       // Check if the user exists
@@ -111,18 +107,16 @@ export class UsersService {
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const decoded = await this.tokenService.verify(token, UsersService);
-      Logger.log(`Token verified: ${decoded}`, UsersService.name);
+      const payload = await this.tokenService.verify(token, UsersService);
+      Logger.log(`Token verified: ${payload.userId}`, UsersService.name);
 
       // update the user's email verification status
       Logger.log('Updating user email verification status...', UsersService.name);
-      const data = decoded as jwt.JwtPayload & ResponsePayload;
-      Logger.log('Decoded token:', data, UsersService.name);
       await this.prisma.user.update({
-        where: { email: data.email },
+        where: { id: payload.userId },
         data: { emailIsVerified: true },
       });
-      return data;
+      return payload;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       if(error.name === 'TokenExpiredError') {

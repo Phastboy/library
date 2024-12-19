@@ -8,16 +8,18 @@ import {
   Query,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
-import path from 'path';
-import { ApiBody, ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {  ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from './auth.guard';
+import { RefreshGuard } from './refresh.guard';
 
-@ApiTags('auth')
+@ApiTags('authentication')
 @Controller('')
 export class AuthController {
   constructor(private readonly authService: AuthService,
@@ -33,16 +35,6 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        username: { type: 'string', example: 'user123' },
-        password: { type: 'string', example: 'Pas$word123' },
-      },
-    },
-  })
   @ApiResponse({ status: 201, description: 'User successfully registered.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   async create(@Body() createUserDto: CreateUserDto) {
@@ -79,15 +71,6 @@ export class AuthController {
 
   @Post('/login')
   @ApiOperation({ summary: 'Login user' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        password: { type: 'string', example: 'Pas$word123' },
-      },
-    },
-  })
   @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async login(@Body() loginDto: LoginDto, @Res() res: any) {
@@ -116,46 +99,7 @@ export class AuthController {
     }
   }
 
-  @Get('/profile')
-  @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async profile(@Req() req) {
-    Logger.log('Received request to get profile', AuthController.name);
-    try {
-      Logger.log(`Fetching profile for user with id ${req.user.id}`, AuthController.name);
-      if (!req.user.id) {
-        Logger.error('User id is required', AuthController.name);
-        throw new Error('User id is required');
-      }
-      const profile = await this.authService.profile(req.user.id);
-      return profile;
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthController.name);
-      throw error;
-    }
-  }
-
-  @Patch('update-profile')
-  @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
-  @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
-    Logger.log('Received request to update profile', AuthController.name);
-    try {
-      Logger.log(`Updating profile for user with id ${req.user.id}`, AuthController.name);
-      if (!req.user.id) {
-        Logger.error('User id is required', AuthController.name);
-        throw new Error('User id is required');
-      }
-      const updated = await this.authService.updateProfile(req.user.id, updateUserDto);
-      return updated;
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, AuthController.name);
-      throw error;
-    }
-  }
-
+  @UseGuards(RefreshGuard)
   @Get('refresh-tokens')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiCookieAuth('refreshToken')
@@ -165,19 +109,11 @@ export class AuthController {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
       Logger.log(`Request headers: ${JSON.stringify(req.headers)}`, AuthController.name);
-      const cookies = req.headers?.cookie;
-      Logger.log(`cookies: ${JSON.stringify(cookies)}`, AuthController.name);
-
-      // extract refresh token from cookies
-      const refreshToken = cookies?.split(';').find((cookie: string) => cookie.trim().startsWith('refreshToken='))?.split('=')[1];
-      Logger.log(`refreshToken: ${refreshToken}`, AuthController.name);
-      if (!refreshToken) {
-        Logger.error('Refresh token not found', AuthController.name);
-        throw new Error('Refresh token not found');
-      }
+      const token = req.userId;
+      Logger.log(`token: ${token}`, AuthController.name);
 
       // refresh tokens
-      const { accessToken, refreshToken: newRefreshToken } = await this.authService.refreshTokens(refreshToken);
+      const { accessToken, refreshToken } = await this.authService.refreshTokens(token);
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
@@ -199,6 +135,7 @@ export class AuthController {
     }
   }
 
+  @UseGuards(AuthGuard)
   @Get('logout')
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful.' })

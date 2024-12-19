@@ -8,15 +8,20 @@ export interface Tokens {
     refreshToken: string;
 }
 
-export interface RequestPayload {
-    id: string;
+export interface User {
     email: string;
+    id: string;
     username: string;
     role: Role;
+    phoneNumber: string | null;
     emailIsVerified: boolean;
+    refreshToken: string | null;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-export interface ResponsePayload extends RequestPayload {
+export interface Payload {
+    userId: string;
     iat: number;
     exp: number;
 }
