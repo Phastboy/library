@@ -40,12 +40,13 @@ export class ProfileController {
     async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
         Logger.log('Received request to update profile', ProfileController.name);
         try {
-        Logger.log(`Updating profile for user with id ${req.user.id}`, ProfileController.name);
-        if (!req.user.id) {
+        Logger.log(`Updating profile for user with id ${req.userId}`, ProfileController.name);
+        if (!req.userId) {
             Logger.error('User id is required', ProfileController.name);
             throw new Error('User id is required');
         }
-            const updated = await this.profileService.updateProfile(req.user.id, updateUserDto);
+            const id= req.userId;
+            const updated = await this.profileService.updateProfile(id, updateUserDto);
             return updated;
         } catch (error: any) {
           Logger.error(error.message, error.stack, ProfileController.name);
