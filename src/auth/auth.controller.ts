@@ -8,6 +8,7 @@ import {
   Query,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
@@ -15,6 +16,8 @@ import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
 import {  ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from './auth.guard';
+import { RefreshGuard } from './refresh.guard';
 
 @ApiTags('authentication')
 @Controller('')
@@ -96,6 +99,7 @@ export class AuthController {
     }
   }
 
+  @UseGuards(RefreshGuard)
   @Get('refresh-tokens')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiCookieAuth('refreshToken')
@@ -105,19 +109,11 @@ export class AuthController {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
       Logger.log(`Request headers: ${JSON.stringify(req.headers)}`, AuthController.name);
-      const cookies = req.headers?.cookie;
-      Logger.log(`cookies: ${JSON.stringify(cookies)}`, AuthController.name);
-
-      // extract refresh token from cookies
-      const refreshToken = cookies?.split(';').find((cookie: string) => cookie.trim().startsWith('refreshToken='))?.split('=')[1];
-      Logger.log(`refreshToken: ${refreshToken}`, AuthController.name);
-      if (!refreshToken) {
-        Logger.error('Refresh token not found', AuthController.name);
-        throw new Error('Refresh token not found');
-      }
+      const token = req.userId;
+      Logger.log(`token: ${token}`, AuthController.name);
 
       // refresh tokens
-      const { accessToken, refreshToken: newRefreshToken } = await this.authService.refreshTokens(refreshToken);
+      const { accessToken, refreshToken } = await this.authService.refreshTokens(token);
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
@@ -139,6 +135,7 @@ export class AuthController {
     }
   }
 
+  @UseGuards(AuthGuard)
   @Get('logout')
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful.' })

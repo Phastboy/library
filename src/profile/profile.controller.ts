@@ -1,16 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Logger, UseGuards } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { CreateProfileDto } from '../dto/profile/create-profile.dto';
 import { UpdateProfileDto } from '../dto/profile/update-profile.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @ApiTags('profile')
-@Controller('profile')
+@Controller()
 export class ProfileController {
     constructor(private readonly profileService: ProfileService) {}
 
-    @Post()
+    @UseGuards(AuthGuard)
     @Get('/profile')
     @ApiOperation({ summary: 'Get user profile' })
     @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
@@ -18,13 +19,13 @@ export class ProfileController {
     async profile(@Req() req) {
       Logger.log('Received request to get profile', ProfileController.name);
       try {
-        Logger.log(req.user, ProfileController.name);
-        Logger.log(`Fetching profile for user with id ${req.user.id}`, ProfileController.name);
-        if (!req.user.id) {
+        Logger.log(req.userId, ProfileController.name);
+        Logger.log(`Fetching profile for user with id ${req.userId}`, ProfileController.name);
+        if (!req.userId) {
           Logger.error('User id is required', ProfileController.name);
           throw new Error('User id is required');
         }
-        const profile = await this.profileService.profile(req.user.id);
+        const profile = await this.profileService.profile(req.userId);
         return profile;
       } catch (error: any) {
         Logger.error(error.message, error.stack, ProfileController.name);

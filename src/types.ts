@@ -20,7 +20,8 @@ export interface User {
     updatedAt: Date;
 }
 
-export interface ResponsePayload extends User {
+export interface Payload {
+    userId: string;
     iat: number;
     exp: number;
 }

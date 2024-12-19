@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ResponsePayload, User } from 'src/types';
+import { Payload, Tokens, User } from 'src/types';
 
 @Injectable()
 export class TokenService {
@@ -28,10 +28,17 @@ export class TokenService {
         return this.jwtService.sign(payload, { secret, expiresIn });
     }
 
-    async verify(token: string, className: any): Promise<ResponsePayload> {
+    async authTokens(userId: string, className: any): Promise<Tokens> {
+        const secret = this.secret(className);
+        const accessToken = this.jwtService.sign({userId}, { secret, expiresIn: '24h' });
+        const refreshToken = this.jwtService.sign({userId}, { secret, expiresIn: '7d' });
+        return { accessToken, refreshToken };
+    }
+
+    async verify(token: string, className: any): Promise<Payload> {
         const secret = this.secret(className);
         try {
-            const data: ResponsePayload = this.jwtService.verify(token, { secret });
+            const data = this.jwtService.verify(token, { secret });
             Logger.log(data, TokenService.name);
             return data;
         } catch (error) {

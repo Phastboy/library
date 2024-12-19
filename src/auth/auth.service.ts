@@ -36,8 +36,7 @@ export class AuthService {
       }
 
       // generate tokens
-      const accessToken = await this.tokenService.generate(user as User, AuthService, '24h');
-      const refreshToken = await this.tokenService.generate(user as User, AuthService, '7d');
+      const { accessToken, refreshToken } = await this.tokenService.authTokens(user.id, AuthService);
 
       // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(refreshToken);
@@ -67,34 +66,19 @@ export class AuthService {
     }
   }
 
-  async refreshTokens(refreshToken: string): Promise<Tokens> {
+  async refreshTokens(userId: string): Promise<Tokens> {
     Logger.log('Received request to refresh tokens', AuthService.name);
     try {
-      // decode the refresh token and get the user
-      const decoded = await this.tokenService.verify(refreshToken, AuthService);
-      Logger.log(decoded, AuthService.name);
-      const {password, ...user} = await this.userService.find(AuthService, { email: decoded.email });
-      if(!user.refreshToken) {
-        throw new BadRequestException('Invalid user');
-      }
-
-      // compare refresh token
-      const isRefreshTokenValid = await argon2.verify(user.refreshToken, refreshToken);
-
-      if (!isRefreshTokenValid) {
-        throw new BadRequestException('Invalid refresh token');
-      }
-
       // generate new tokens
-      const accessToken = await this.tokenService.generate(user as User, AuthService, '24h');
-      const newRefreshToken = await this.tokenService.generate(user as User, AuthService, '7d');
+      const { accessToken, refreshToken}= await this.tokenService.authTokens(userId, AuthService);
 
       // persist refresh token with argon2 hash
-      const hashedRefreshToken = await argon2.hash(newRefreshToken);
-      await this.userService.update(user.id, {refreshToken: hashedRefreshToken});
-      Logger.log(`Tokens refreshed successfully for user with email ${user.email}`, AuthService.name);
+      const hashedRefreshToken = await argon2.hash(refreshToken);
+      const id = userId;
+      await this.userService.update(id, {refreshToken: hashedRefreshToken});
+      Logger.log(`Tokens refreshed successfully for user with id ${id}`, AuthService.name);
 
-      return { accessToken, refreshToken: newRefreshToken };
+      return { accessToken, refreshToken };
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;
@@ -105,12 +89,12 @@ export class AuthService {
     Logger.log('Received request to logout', AuthService.name);
     try {
       const decoded = await this.tokenService.verify(accessToken, AuthService);
-      const user = await this.userService.find(AuthService, { email: decoded.email });
+      const user = await this.userService.find(AuthService, { id: decoded.userId });
       if(!user) {
         throw new BadRequestException('Invalid user');
       }
       await this.userService.update(user.id, {refreshToken: null});
-      Logger.log(`Logout successful for user with email ${user.email}`, AuthService.name);
+      Logger.log(`Logout successful for user with email ${user.id}`, AuthService.name);
       return {
         message: 'Logout successful',
       }

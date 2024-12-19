@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { User, ResponsePayload, UserCriteria } from 'src/types';
+import { User, Payload, UserCriteria } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -107,18 +107,16 @@ export class UsersService {
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const decoded = await this.tokenService.verify(token, UsersService);
-      Logger.log(`Token verified: ${decoded}`, UsersService.name);
+      const payload = await this.tokenService.verify(token, UsersService);
+      Logger.log(`Token verified: ${payload.userId}`, UsersService.name);
 
       // update the user's email verification status
       Logger.log('Updating user email verification status...', UsersService.name);
-      const data = decoded as jwt.JwtPayload & ResponsePayload;
-      Logger.log('Decoded token:', data, UsersService.name);
       await this.prisma.user.update({
-        where: { email: data.email },
+        where: { id: payload.userId },
         data: { emailIsVerified: true },
       });
-      return data;
+      return payload;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       if(error.name === 'TokenExpiredError') {
