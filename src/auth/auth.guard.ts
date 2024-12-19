@@ -11,7 +11,7 @@ export class AuthGuard implements CanActivate {
     context: ExecutionContext,
   ): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeaders(request);
+    const token = this.tokenService.extractTokenFromCookie(request.headers?.cookie, 'accessToken')
     if (!token) {
       throw new Error('No token found in request headers');
     }
@@ -26,25 +26,5 @@ export class AuthGuard implements CanActivate {
     }
     
     return true;
-  }
-
-  private extractTokenFromHeaders(request: Request): string | null {
-    // extract cookie from request headers
-    const cookie = request.headers?.cookie;
-    if (!cookie) {
-      Logger.error('No cookie found in request headers', AuthGuard.name);
-      return null;
-    }
-
-    // extract tokens from cookie
-    const token = cookie.split(';').find(c => c.trim().startsWith('accessToken='));
-    if (token) {
-      Logger.log(`Token: ${token}`, AuthGuard.name);
-      const accessToken = token.split('=')[1];
-      Logger.log(`Access token: ${accessToken}`, AuthGuard.name);
-      return accessToken;
-    }
-    Logger.error('No access token found in cookie', AuthGuard.name);
-    return null;
   }
 }

@@ -7,11 +7,11 @@ import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 
 @ApiTags('profile')
+@UseGuards(AuthGuard)
 @Controller()
 export class ProfileController {
     constructor(private readonly profileService: ProfileService) {}
 
-    @UseGuards(AuthGuard)
     @Get('/profile')
     @ApiOperation({ summary: 'Get user profile' })
     @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })

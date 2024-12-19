@@ -46,4 +46,10 @@ export class TokenService {
             throw new UnauthorizedException('Invalid token');
         }
     }
+
+    extractTokenFromCookie(cookie: string | undefined, tokenKey: string): string | null {
+      if (!cookie) return null;
+      const token = cookie.split(';').find(c => c.trim().startsWith(`${tokenKey}=`));
+      return token ? token.split('=')[1] : null;
+    }  
 }

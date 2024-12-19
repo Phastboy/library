@@ -1,7 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { Observable } from 'rxjs';
 import { TokenService } from 'src/token/token.service';
 import { UsersService } from 'src/users/users.service';
 import * as argon2 from 'argon2';
@@ -13,7 +11,7 @@ export class RefreshGuard implements CanActivate {
     context: ExecutionContext,
   ): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeaders(request);
+    const token = this.tokenService.extractTokenFromCookie(request.headers?.cookie, 'refreshToken');
     if (!token) {
       throw new Error('No token found in request headers');
     }
@@ -38,25 +36,5 @@ export class RefreshGuard implements CanActivate {
     }
     
     return true;
-  }
-
-  private extractTokenFromHeaders(request: Request): string | null {
-    // extract cookie from request headers
-    const cookie = request.headers?.cookie;
-    if (!cookie) {
-      Logger.error('No cookie found in request headers', RefreshGuard.name);
-      return null;
-    }
-
-    // extract tokens from cookie
-    const token = cookie.split(';').find(c => c.trim().startsWith('refreshToken='));
-    if (token) {
-      Logger.log(`Token: ${token}`, RefreshGuard.name);
-      const refreshToken = token.split('=')[1];
-      Logger.log(`refresh token: ${refreshToken}`, RefreshGuard.name);
-      return refreshToken;
-    }
-    Logger.error('No access token found in cookie', RefreshGuard.name);
-    return null;
   }
 }
