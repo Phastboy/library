@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { User, Payload, UserCriteria } from 'src/types';
+import { User, Payload, UserCriteria, Profile } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -190,12 +190,12 @@ export class UsersService {
     }
   }
 
-  async update(id: string, data: UpdateUserDto){
-    Logger.log(`Updating user with id ${id}`, UsersService.name);
+  async update(userId: string, data: UpdateUserDto): Promise<Profile> {
+    Logger.log(`Updating user with id ${userId}`, UsersService.name);
     try {
       Logger.log('Updating user...', UsersService.name);
-      const update = await this.prisma.user.update({
-        where: { id },
+      const {id, password, refreshToken, ...update} = await this.prisma.user.update({
+        where: { id: userId },
         data,
       });
       Logger.log(`User updated: ${update}`, UsersService.name);
@@ -206,9 +206,9 @@ export class UsersService {
     }
   }
 
-  async delete(id: string){
+  async delete(id: string, className: any) {
     try {
-      Logger.log('Deleting user...', UsersService.name);
+      Logger.log('Deleting user...', className.name);
       return await this.prisma.user.delete({
         where: { id },
       });

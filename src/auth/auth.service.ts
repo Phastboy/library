@@ -11,26 +11,31 @@ import { TokenService } from 'src/token/token.service';
 export class AuthService {
   constructor(private userService: UsersService, private tokenService: TokenService) {}
 
+
+    public cookieOptions = {
+      httpOnly: true,
+      secure: this.tokenService.isProduction(),
+      sameSite: this.tokenService.isProduction() ? 'none' : 'lax',
+      path: '/',
+    };
+
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
-    const payload = await this.userService.create(createUserDto);
-    const token = await this.userService.generateEmailVerificationToken(payload);
-    await this.userService.sendEmailVerificationEmail(payload.email, token);
-    return {
-      message: 'User registered successfully',
-      data: payload,
-    }
+    const user = await this.userService.create(createUserDto);
+    const token = await this.userService.generateEmailVerificationToken(user);
+    await this.userService.sendEmailVerificationEmail(user.email, token);
+    return user.id;
   }
 
   // login
   async login(data: LoginDto) {
     Logger.log('Received request to login', AuthService.name);
     try {
-      const {password, ...user} = await this.userService.find(AuthService, { email: data.email });
+      const user = await this.userService.find(AuthService, { email: data.email });
       if (!user) {
         throw new BadRequestException('Invalid email');
       }
-      const isPasswordValid = await argon2.verify(password, data.password);
+      const isPasswordValid = await argon2.verify(user.password, data.password);
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid password');
       }

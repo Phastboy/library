@@ -7,15 +7,18 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TokenModule } from 'src/token/token.module';
 import { TokenService } from 'src/token/token.service';
+import { AuthModule } from 'src/auth/auth.module';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
-  imports: [UsersModule, PrismaModule, TokenModule],
+  imports: [UsersModule, PrismaModule, TokenModule, AuthModule],
   controllers: [ProfileController],
   providers: [
     ProfileService,
     UsersService,
     PrismaService,
-    TokenService
+    TokenService,
+    AuthService,
   ],
 })
 export class ProfileModule {}
