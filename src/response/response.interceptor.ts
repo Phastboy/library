@@ -15,13 +15,16 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
       map((response) => {
         const httpContext = context.switchToHttp();
         const request = httpContext.getRequest();
-        const statusCode = httpContext.getResponse().statusCode || HttpStatus.OK;
+        const statusCode =
+          httpContext.getResponse().statusCode || HttpStatus.OK;
         const method = request.method;
         const url = request.url;
         return {
           success: true,
           status: statusCode,
-          message: response.message ?? `Successfully processed ${method} request to ${url}`,
+          message:
+            response.message ??
+            `Successfully processed ${method} request to ${url}`,
           data: response.data ?? response,
         };
       }),

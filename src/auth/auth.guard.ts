@@ -1,30 +1,25 @@
-import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-import { Observable } from 'rxjs';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly tokenService: TokenService) {}
-  async canActivate(
-    context: ExecutionContext,
-  ): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = this.tokenService.extractTokenFromCookie(request.headers?.cookie, 'accessToken')
-    if (!token) {
-      throw new UnauthorizedException('Access token not found');
-    }
 
-    try {
-      const user = await this.tokenService.verify(token, AuthGuard)
-      request.userId = user.userId
-      Logger.log(user, AuthGuard.name);
-    } catch (error) {
-      Logger.error('Invalid token', AuthGuard.name);
-      throw new Error('Invalid token');
-    }
-    
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const token = this.tokenService.extractTokenFromCookie(
+      request.headers?.cookie,
+      'accessToken',
+    );
+    if (!token) throw new UnauthorizedException('Access token not found');
+
+    const user = await this.tokenService.verify(token);
+    request.userId = user;
     return true;
   }
 }

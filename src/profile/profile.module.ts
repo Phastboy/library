@@ -9,9 +9,11 @@ import { TokenModule } from 'src/token/token.module';
 import { TokenService } from 'src/token/token.service';
 import { AuthModule } from 'src/auth/auth.module';
 import { AuthService } from 'src/auth/auth.service';
+import { MailModule } from 'src/mail/mail.module';
+import { MailService } from 'src/mail/mail.service';
 
 @Module({
-  imports: [UsersModule, PrismaModule, TokenModule, AuthModule],
+  imports: [UsersModule, PrismaModule, TokenModule, AuthModule, MailModule],
   controllers: [ProfileController],
   providers: [
     ProfileService,
@@ -19,6 +21,7 @@ import { AuthService } from 'src/auth/auth.service';
     PrismaService,
     TokenService,
     AuthService,
+    MailService,
   ],
 })
 export class ProfileModule {}
