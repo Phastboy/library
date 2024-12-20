@@ -3,15 +3,15 @@ import {
   BadRequestException,
   Logger,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/dto/user/create-user.dto';
-import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { User, Payload, UserCriteria, Profile } from 'src/types';
+import { User, UserCriteria, Profile } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -102,11 +102,7 @@ export class UsersService {
 
       // Generate the token
       Logger.log('Generating token...', UsersService.name);
-      const token = await this.tokenService.generate(
-        payload,
-        UsersService,
-        '1h',
-      );
+      const token = await this.tokenService.generate(payload);
       Logger.log('Token generated', UsersService.name);
       return token;
     } catch (error) {
@@ -132,8 +128,8 @@ export class UsersService {
     try {
       // Verify the token
       Logger.log('Verifying token...', UsersService.name);
-      const payload = await this.tokenService.verify(token, UsersService);
-      Logger.log(`Token verified: ${payload.userId}`, UsersService.name);
+      const payload = await this.tokenService.verify(token);
+      Logger.log(`Token verified: ${payload}`, UsersService.name);
 
       // update the user's email verification status
       Logger.log(
@@ -141,7 +137,7 @@ export class UsersService {
         UsersService.name,
       );
       await this.prisma.user.update({
-        where: { id: payload.userId },
+        where: { id: payload },
         data: { emailIsVerified: true },
       });
       return payload;
@@ -244,5 +240,16 @@ export class UsersService {
       Logger.error(error.message, error.stack, UsersService.name);
       throw new InternalServerErrorException('Error deleting user');
     }
+  }
+
+  async validateRefreshToken(token: string): Promise<string> {
+    const userId = await this.tokenService.verify(token);
+    const user = await this.find(UsersService, { id: userId });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const isValid = await argon2.verify(user.refreshToken, token);
+    if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+
+    return userId;
   }
 }

@@ -1,4 +1,5 @@
 import { $Enums } from '@prisma/client';
+import { Request } from 'express';
 
 export enum Role {
   ADMIN = 'admin',
@@ -42,4 +43,8 @@ export interface Profile {
   emailIsVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface AuthenticatedRequest extends Request {
+  userId?: string;
 }

@@ -1,8 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
-import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
-import { User, Role, Tokens } from 'src/types';
+import { Tokens } from 'src/types';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import * as argon2 from 'argon2';
 import { TokenService } from 'src/token/token.service';
@@ -47,7 +46,6 @@ export class AuthService {
       // generate tokens
       const { accessToken, refreshToken } = await this.tokenService.authTokens(
         user.id,
-        AuthService,
       );
 
       // persist refresh token with argon2 hash
@@ -87,10 +85,8 @@ export class AuthService {
     Logger.log('Received request to refresh tokens', AuthService.name);
     try {
       // generate new tokens
-      const { accessToken, refreshToken } = await this.tokenService.authTokens(
-        userId,
-        AuthService,
-      );
+      const { accessToken, refreshToken } =
+        await this.tokenService.authTokens(userId);
 
       // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(refreshToken);
@@ -111,9 +107,9 @@ export class AuthService {
   async logout(accessToken: string) {
     Logger.log('Received request to logout', AuthService.name);
     try {
-      const decoded = await this.tokenService.verify(accessToken, AuthService);
+      const decoded = await this.tokenService.verify(accessToken);
       const user = await this.userService.find(AuthService, {
-        id: decoded.userId,
+        id: decoded,
       });
       if (!user) {
         throw new BadRequestException('Invalid user');

@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Logger,
   Query,
   Req,
@@ -12,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
-import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
 import {
@@ -40,10 +38,8 @@ export class AuthController {
   async create(@Body() createUserDto: CreateUserDto, @Res() res: any) {
     try {
       const data = await this.authService.create(createUserDto);
-      const { accessToken, refreshToken } = await this.tokenService.authTokens(
-        data,
-        AuthController,
-      );
+      const { accessToken, refreshToken } =
+        await this.tokenService.authTokens(data);
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
