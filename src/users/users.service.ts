@@ -185,7 +185,7 @@ export class UsersService {
     try {
       const users = await this.prisma.user.findMany();
       Logger.log(`Found ${users.length} users`, UsersService.name);
-      return users.map(user => this.stripSensitiveFields(user));
+      return users.map((user) => this.stripSensitiveFields(user));
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw error;

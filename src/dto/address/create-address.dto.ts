@@ -66,7 +66,7 @@ export class CreateAddressDto {
 
   @ApiPropertyOptional({
     description: 'Longitude of the address',
-    example: -74.0060,
+    example: -74.006,
   })
   @IsLongitude()
   @IsOptional()

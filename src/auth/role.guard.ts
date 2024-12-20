@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from 'src/decorators/roles.decorator';
 import { Role } from '@prisma/client';
@@ -7,7 +13,10 @@ import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private reflector: Reflector, private usersService: UsersService) {}
+  constructor(
+    private reflector: Reflector,
+    private usersService: UsersService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Get required roles from metadata (via @Roles decorator)
@@ -25,7 +34,10 @@ export class RoleGuard implements CanActivate {
     const request: AuthenticatedRequest = context.switchToHttp().getRequest();
     const userId = request.userId; // Extract user ID from request
 
-    Logger.log(`User ID: ${userId} requesting access with roles: ${requiredRoles.join(', ')}`, RoleGuard.name);
+    Logger.log(
+      `User ID: ${userId} requesting access with roles: ${requiredRoles.join(', ')}`,
+      RoleGuard.name,
+    );
 
     // Fetch user details from the database
     const user = await this.usersService.find(RoleGuard, { id: userId });
@@ -38,8 +50,13 @@ export class RoleGuard implements CanActivate {
 
     // If user doesn't have the required role, deny access
     if (!user.role || !requiredRoles.includes(user.role)) {
-      Logger.warn(`User with ID: ${userId} does not have required role. User role: ${user.role}`, RoleGuard.name);
-      throw new UnauthorizedException(`You do not have the required role. Required: ${requiredRoles.join(', ')}, Your Role: ${user.role}`);
+      Logger.warn(
+        `User with ID: ${userId} does not have required role. User role: ${user.role}`,
+        RoleGuard.name,
+      );
+      throw new UnauthorizedException(
+        `You do not have the required role. Required: ${requiredRoles.join(', ')}, Your Role: ${user.role}`,
+      );
     }
 
     return true;

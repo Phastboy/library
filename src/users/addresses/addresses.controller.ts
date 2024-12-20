@@ -56,7 +56,11 @@ export class AddressesController {
   @ApiResponse({ status: 200, description: 'Address updated successfully.' })
   @ApiResponse({ status: 404, description: 'Address not found.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async  update(@Req() req: any, @Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
+  async update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() updateAddressDto: UpdateAddressDto,
+  ) {
     const { userId } = await req;
     return await this.addressesService.update(userId, updateAddressDto);
   }

@@ -7,7 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class AddressesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string,createAddressDto: CreateAddressDto) {
+  async create(userId: string, createAddressDto: CreateAddressDto) {
     return await this.prisma.address.create({
       data: {
         userId,
@@ -16,7 +16,7 @@ export class AddressesService {
         city: createAddressDto.city,
         country: createAddressDto.country,
         postalCode: createAddressDto.postalCode,
-      }
+      },
     });
   }
 
