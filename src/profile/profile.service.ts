@@ -35,7 +35,7 @@ export class ProfileService {
     Logger.log('Received request to delete profile', ProfileService.name);
     try {
       const { id, refreshToken, password, ...profile } =
-        await this.userService.delete(userId, ProfileService);
+        await this.userService.delete(userId);
       Logger.log(
         `Profile deleted for user with id ${userId}`,
         ProfileService.name,

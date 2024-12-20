@@ -84,6 +84,7 @@ export class UsersService {
           email: data.email,
           username,
           password: hashedPassword,
+          role: data.role,
         },
       });
       Logger.log('User created successfully', UsersService.name);
@@ -184,7 +185,7 @@ export class UsersService {
     try {
       const users = await this.prisma.user.findMany();
       Logger.log(`Found ${users.length} users`, UsersService.name);
-      return users;
+      return users.map(user => this.stripSensitiveFields(user));
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw error;
@@ -208,9 +209,8 @@ export class UsersService {
     }
   }
 
-  async delete(id: string, className: any) {
+  async delete(id: string) {
     try {
-      Logger.log('Deleting user...', className.name);
       return await this.prisma.user.delete({
         where: { id },
       });
@@ -229,5 +229,10 @@ export class UsersService {
     if (!isValid) throw new UnauthorizedException('Invalid refresh token');
 
     return userId;
+  }
+
+  private stripSensitiveFields(user: any) {
+    const { password, refreshToken, ...rest } = user;
+    return rest;
   }
 }
