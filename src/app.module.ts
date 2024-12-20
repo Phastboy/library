@@ -5,8 +5,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { ProfileModule } from './profile/profile.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -16,21 +16,8 @@ import { ProfileModule } from './profile/profile.module';
     AuthModule,
     PrismaModule,
     UsersModule,
-    MailerModule.forRoot({
-      transport: {
-        host: process.env.SMTP_HOST,
-        port: +process.env.SMTP_PORT,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      },
-      defaults: {
-        from: process.env.SMTP_FROM,
-      },
-    }),
     ProfileModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

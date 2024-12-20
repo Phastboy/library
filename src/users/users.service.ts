@@ -8,18 +8,30 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/dto/user/create-user.dto';
-import { MailerService } from '@nestjs-modules/mailer';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
 import { User, UserCriteria, Profile } from 'src/types';
+import { MailService } from 'src/mail/mail.service';
+import { generateVerificationEmailContent } from 'src/mail/mail.helpers';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private mailerService: MailerService,
-    private tokenService: TokenService,
+    private readonly mailService: MailService,
+    private readonly tokenService: TokenService,
   ) {}
+
+  async sendEmailVerificationEmail(email: string, token: string) {
+    const verificationLink = this.generateLink({
+      endpoint: '/verify-email',
+      query: { token },
+    });
+    const subject = 'Email Verification';
+    const content = generateVerificationEmailContent(verificationLink);
+
+    await this.mailService.sendEmail(email, subject, content);
+  }
 
   async find(className: any, criteria: UserCriteria) {
     Logger.log(`finding user...`, className.name);
@@ -150,55 +162,21 @@ export class UsersService {
     }
   }
 
-  private generateVerificationLink(token: string): string {
+  generateLink(args: {
+    endpoint: string;
+    query?: Record<string, string>;
+  }): string {
     const baseUrl = process.env.API_URL || 'http://localhost:8080';
-    const url = new URL('/verify-email', baseUrl);
-    url.searchParams.set('token', token);
-    Logger.log('Verification link:', url.toString());
-    return url.toString();
-  }
+    const url = new URL(args.endpoint, baseUrl);
 
-  async sendEmail(email: string, subject: string, content: string) {
-    Logger.log('Sending email...');
-
-    try {
-      const info = await this.mailerService.sendMail({
-        from: process.env.SMTP_FROM || 'stationphast@gmail.com',
-        to: email,
-        subject,
-        html: content,
+    if (args.query) {
+      Object.entries(args.query).forEach(([key, value]) => {
+        url.searchParams.set(key, value);
       });
-      Logger.log(`Email sent successfully: ${info.messageId}`);
-    } catch (error) {
-      Logger.error('Error sending email', error.stack);
-      throw new InternalServerErrorException('Error sending email');
     }
-  }
 
-  private generateEmailTemplate(content: string): string {
-    return `
-        <body style="font-family: Arial, sans-serif; text-align: center;">
-            ${content}
-        </body>
-    `;
-  }
-
-  async sendEmailVerificationEmail(email: string, token: string) {
-    Logger.log('Preparing to send verification email...');
-    const verificationLink = this.generateVerificationLink(token);
-
-    const subject = 'Email Verification';
-    const content = this.generateEmailTemplate(`
-        <h1>Welcome to MyLibrary!</h1>
-        <p>Please click the button below to verify your email address</p>
-        <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
-          <button style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none;">
-            Verify Email
-          </button>
-        </a>
-    `);
-
-    await this.sendEmail(email, subject, content);
+    Logger.log(`Generated link: ${url.toString()}`, 'generateLink');
+    return url.toString();
   }
 
   async findAll() {
