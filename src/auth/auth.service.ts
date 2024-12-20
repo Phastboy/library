@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
-import { UpdateUserDto} from '../dto/user/update-user.dto';
+import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { User, Role, Tokens } from 'src/types';
 import { LoginDto } from 'src/dto/auth/login.dto';
@@ -9,15 +9,17 @@ import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private userService: UsersService, private tokenService: TokenService) {}
+  constructor(
+    private userService: UsersService,
+    private tokenService: TokenService,
+  ) {}
 
-
-    public cookieOptions = {
-      httpOnly: true,
-      secure: this.tokenService.isProduction(),
-      sameSite: this.tokenService.isProduction() ? 'none' : 'lax',
-      path: '/',
-    };
+  public cookieOptions = {
+    httpOnly: true,
+    secure: this.tokenService.isProduction(),
+    sameSite: this.tokenService.isProduction() ? 'none' : 'lax',
+    path: '/',
+  };
 
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
@@ -31,7 +33,9 @@ export class AuthService {
   async login(data: LoginDto) {
     Logger.log('Received request to login', AuthService.name);
     try {
-      const user = await this.userService.find(AuthService, { email: data.email });
+      const user = await this.userService.find(AuthService, {
+        email: data.email,
+      });
       if (!user) {
         throw new BadRequestException('Invalid email');
       }
@@ -41,13 +45,21 @@ export class AuthService {
       }
 
       // generate tokens
-      const { accessToken, refreshToken } = await this.tokenService.authTokens(user.id, AuthService);
+      const { accessToken, refreshToken } = await this.tokenService.authTokens(
+        user.id,
+        AuthService,
+      );
 
       // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(refreshToken);
-      await this.userService.update(user.id, {refreshToken: hashedRefreshToken});
-      Logger.log(`Login successful for user with email ${data.email}`, AuthService.name);
-      
+      await this.userService.update(user.id, {
+        refreshToken: hashedRefreshToken,
+      });
+      Logger.log(
+        `Login successful for user with email ${data.email}`,
+        AuthService.name,
+      );
+
       return { accessToken, refreshToken };
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
@@ -63,7 +75,7 @@ export class AuthService {
         return {
           message: 'Email verified successfully',
           data,
-        }
+        };
       }
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
@@ -75,13 +87,19 @@ export class AuthService {
     Logger.log('Received request to refresh tokens', AuthService.name);
     try {
       // generate new tokens
-      const { accessToken, refreshToken}= await this.tokenService.authTokens(userId, AuthService);
+      const { accessToken, refreshToken } = await this.tokenService.authTokens(
+        userId,
+        AuthService,
+      );
 
       // persist refresh token with argon2 hash
       const hashedRefreshToken = await argon2.hash(refreshToken);
       const id = userId;
-      await this.userService.update(id, {refreshToken: hashedRefreshToken});
-      Logger.log(`Tokens refreshed successfully for user with id ${id}`, AuthService.name);
+      await this.userService.update(id, { refreshToken: hashedRefreshToken });
+      Logger.log(
+        `Tokens refreshed successfully for user with id ${id}`,
+        AuthService.name,
+      );
 
       return { accessToken, refreshToken };
     } catch (error: any) {
@@ -94,15 +112,20 @@ export class AuthService {
     Logger.log('Received request to logout', AuthService.name);
     try {
       const decoded = await this.tokenService.verify(accessToken, AuthService);
-      const user = await this.userService.find(AuthService, { id: decoded.userId });
-      if(!user) {
+      const user = await this.userService.find(AuthService, {
+        id: decoded.userId,
+      });
+      if (!user) {
         throw new BadRequestException('Invalid user');
       }
-      await this.userService.update(user.id, {refreshToken: null});
-      Logger.log(`Logout successful for user with email ${user.id}`, AuthService.name);
+      await this.userService.update(user.id, { refreshToken: null });
+      Logger.log(
+        `Logout successful for user with email ${user.id}`,
+        AuthService.name,
+      );
       return {
         message: 'Logout successful',
-      }
+      };
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;

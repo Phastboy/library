@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/dto/user/create-user.dto';
@@ -10,41 +15,46 @@ import { User, Payload, UserCriteria, Profile } from 'src/types';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService,
+  constructor(
+    private readonly prisma: PrismaService,
     private mailerService: MailerService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
   ) {}
 
-    async find(className: any, criteria: UserCriteria) {
-      Logger.log(`finding user...`, className.name);
-      // Filter out undefined fields
-      const whereCriteria = {
-        OR: Object.entries(criteria)
-          .filter(([_, value]) => value !== undefined)
-          .map(([key, value]) => ({ [key]: value })),
-      };
-      Logger.log('Where condition:', whereCriteria, className.name);
-      if (!whereCriteria.OR.length) {
-        Logger.error('Invalid criteria', className.name);
-        throw new BadRequestException('Invalid criteria');
-      }
-
-      const user = await this.prisma.user.findFirst({ where: whereCriteria });
-      if (user) {
-        Logger.log('User found', className.name);
-        return user;
-      }
-      Logger.log('User not found', className.name);
-      return null;
+  async find(className: any, criteria: UserCriteria) {
+    Logger.log(`finding user...`, className.name);
+    // Filter out undefined fields
+    const whereCriteria = {
+      OR: Object.entries(criteria)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => ({ [key]: value })),
+    };
+    Logger.log('Where condition:', whereCriteria, className.name);
+    if (!whereCriteria.OR.length) {
+      Logger.error('Invalid criteria', className.name);
+      throw new BadRequestException('Invalid criteria');
     }
+
+    const user = await this.prisma.user.findFirst({ where: whereCriteria });
+    if (user) {
+      Logger.log('User found', className.name);
+      return user;
+    }
+    Logger.log('User not found', className.name);
+    return null;
+  }
 
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
-  
+
     // Check for email and username
-    Logger.log('Checking for email or username conflicts...', UsersService.name);
-    const username = data.username || `${data.email.split('@')[0]}_${Date.now()}`;
-    const user= await this.find(UsersService, { email: data.email, username });
+    Logger.log(
+      'Checking for email or username conflicts...',
+      UsersService.name,
+    );
+    const username =
+      data.username || `${data.email.split('@')[0]}_${Date.now()}`;
+    const user = await this.find(UsersService, { email: data.email, username });
     if (user && user.email === data.email) {
       Logger.error('Email already exists', UsersService.name);
       throw new BadRequestException('Email already exists');
@@ -53,7 +63,7 @@ export class UsersService {
       Logger.error('Username already exists', UsersService.name);
       throw new BadRequestException('Username already exists');
     }
-  
+
     // Hash the password and create the user
     const hashedPassword = await argon2.hash(data.password);
     try {
@@ -65,7 +75,7 @@ export class UsersService {
         },
       });
       Logger.log('User created successfully', UsersService.name);
-  
+
       return result as User;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
@@ -74,34 +84,49 @@ export class UsersService {
   }
 
   async generateEmailVerificationToken(payload: User): Promise<string> {
-    Logger.log('Received request to generate email verification token', UsersService.name);
+    Logger.log(
+      'Received request to generate email verification token',
+      UsersService.name,
+    );
     try {
       // Check if the user exists
       Logger.log('Checking if user exists...', UsersService.name);
       const user = await this.prisma.user.findUnique({
-      where: { email: payload.email },
+        where: { email: payload.email },
       });
       if (!user) {
-      Logger.error('User not found', UsersService.name);
-      throw new BadRequestException('User not found');
+        Logger.error('User not found', UsersService.name);
+        throw new BadRequestException('User not found');
       }
       Logger.log('User found', UsersService.name);
 
       // Generate the token
       Logger.log('Generating token...', UsersService.name);
-      const token = await this.tokenService.generate(payload, UsersService, '1h');
+      const token = await this.tokenService.generate(
+        payload,
+        UsersService,
+        '1h',
+      );
       Logger.log('Token generated', UsersService.name);
       return token;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
-      throw new InternalServerErrorException('Error generating email verification token');
+      throw new InternalServerErrorException(
+        'Error generating email verification token',
+      );
     }
   }
 
   async verifyEmailVerificationToken(token: string) {
-    Logger.log('Received request to verify email verification token', UsersService.name);
+    Logger.log(
+      'Received request to verify email verification token',
+      UsersService.name,
+    );
     if (!token || typeof token !== 'string') {
-      Logger.error('Invalid token: Token is required and must be a string', UsersService.name);
+      Logger.error(
+        'Invalid token: Token is required and must be a string',
+        UsersService.name,
+      );
       throw new BadRequestException('Invalid token');
     }
     try {
@@ -111,7 +136,10 @@ export class UsersService {
       Logger.log(`Token verified: ${payload.userId}`, UsersService.name);
 
       // update the user's email verification status
-      Logger.log('Updating user email verification status...', UsersService.name);
+      Logger.log(
+        'Updating user email verification status...',
+        UsersService.name,
+      );
       await this.prisma.user.update({
         where: { id: payload.userId },
         data: { emailIsVerified: true },
@@ -119,7 +147,7 @@ export class UsersService {
       return payload;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
-      if(error.name === 'TokenExpiredError') {
+      if (error.name === 'TokenExpiredError') {
         throw new BadRequestException('Token has expired');
       }
       throw new BadRequestException('Invalid token');
@@ -150,7 +178,7 @@ export class UsersService {
       throw new InternalServerErrorException('Error sending email');
     }
   }
-  
+
   private generateEmailTemplate(content: string): string {
     return `
         <body style="font-family: Arial, sans-serif; text-align: center;">
@@ -158,7 +186,6 @@ export class UsersService {
         </body>
     `;
   }
-
 
   async sendEmailVerificationEmail(email: string, token: string) {
     Logger.log('Preparing to send verification email...');
@@ -178,7 +205,7 @@ export class UsersService {
     await this.sendEmail(email, subject, content);
   }
 
-  async findAll(){
+  async findAll() {
     Logger.log('Finding all users...', UsersService.name);
     try {
       const users = await this.prisma.user.findMany();
@@ -194,10 +221,11 @@ export class UsersService {
     Logger.log(`Updating user with id ${userId}`, UsersService.name);
     try {
       Logger.log('Updating user...', UsersService.name);
-      const {id, password, refreshToken, ...update} = await this.prisma.user.update({
-        where: { id: userId },
-        data,
-      });
+      const { id, password, refreshToken, ...update } =
+        await this.prisma.user.update({
+          where: { id: userId },
+          data,
+        });
       Logger.log(`User updated: ${update}`, UsersService.name);
       return update;
     } catch (error) {

@@ -10,6 +10,6 @@ import { TokenModule } from 'src/token/token.module';
   imports: [PrismaModule, AddressesModule, TokenModule],
   providers: [UsersService, TokenService],
   exports: [UsersService],
-  controllers: [UsersController]
+  controllers: [UsersController],
 })
 export class UsersModule {}

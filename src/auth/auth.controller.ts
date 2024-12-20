@@ -15,14 +15,21 @@ import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { TokenService } from 'src/token/token.service';
-import {  ApiCookieAuth, ApiQuery, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCookieAuth,
+  ApiQuery,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from './auth.guard';
 import { RefreshGuard } from './refresh.guard';
 
 @ApiTags('authentication')
 @Controller('')
 export class AuthController {
-  constructor(private readonly authService: AuthService,
+  constructor(
+    private readonly authService: AuthService,
     private readonly tokenService: TokenService,
   ) {}
 
@@ -33,7 +40,10 @@ export class AuthController {
   async create(@Body() createUserDto: CreateUserDto, @Res() res: any) {
     try {
       const data = await this.authService.create(createUserDto);
-      const { accessToken, refreshToken} = await this.tokenService.authTokens(data, AuthController);
+      const { accessToken, refreshToken } = await this.tokenService.authTokens(
+        data,
+        AuthController,
+      );
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
@@ -48,7 +58,7 @@ export class AuthController {
 
       return res.json({
         message: 'Registration successful',
-      })
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -65,7 +75,10 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Email successfully verified.' })
   @ApiResponse({ status: 400, description: 'Invalid token.' })
   async verifyEmail(@Query('token') token: string) {
-    Logger.log(`Received request to verify email with token ${token}`, AuthController.name);
+    Logger.log(
+      `Received request to verify email with token ${token}`,
+      AuthController.name,
+    );
     try {
       if (!token) {
         throw new Error('Token is required');
@@ -84,7 +97,8 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto, @Res() res: any) {
     Logger.log('Received request to login', AuthController.name);
     try {
-      const { accessToken, refreshToken} = await this.authService.login(loginDto);
+      const { accessToken, refreshToken } =
+        await this.authService.login(loginDto);
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
@@ -97,7 +111,10 @@ export class AuthController {
       });
       Logger.log(`cookies set`, AuthController.name);
 
-      Logger.log(`Login successful for user with email ${loginDto.email}`, AuthController.name);
+      Logger.log(
+        `Login successful for user with email ${loginDto.email}`,
+        AuthController.name,
+      );
       return res.json({
         message: 'Login successful',
       });
@@ -116,12 +133,16 @@ export class AuthController {
   async refreshTokens(@Req() req: any, @Res() res: any) {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
-      Logger.log(`Request headers: ${JSON.stringify(req.headers)}`, AuthController.name);
+      Logger.log(
+        `Request headers: ${JSON.stringify(req.headers)}`,
+        AuthController.name,
+      );
       const token = req.userId;
       Logger.log(`token: ${token}`, AuthController.name);
 
       // refresh tokens
-      const { accessToken, refreshToken } = await this.authService.refreshTokens(token);
+      const { accessToken, refreshToken } =
+        await this.authService.refreshTokens(token);
 
       // set cookies
       await res.cookie('accessToken', accessToken, {
@@ -136,7 +157,7 @@ export class AuthController {
 
       return res.json({
         message: 'Tokens refreshed successfully',
-      });     
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -151,11 +172,14 @@ export class AuthController {
   async logout(@Req() req: any, @Res() res: any) {
     Logger.log('Received request to logout', AuthController.name);
     try {
-      const cookies= req.headers?.cookie;
+      const cookies = req.headers?.cookie;
       Logger.log(`cookies: ${JSON.stringify(cookies)}`, AuthController.name);
 
       // extract refresh token from cookies
-      const accessToken = cookies?.split(';').find((cookie: string) => cookie.trim().startsWith('accessToken='))?.split('=')[1];
+      const accessToken = cookies
+        ?.split(';')
+        .find((cookie: string) => cookie.trim().startsWith('accessToken='))
+        ?.split('=')[1];
       Logger.log(`refreshToken: ${accessToken}`, AuthController.name);
       if (!accessToken) {
         Logger.error('Refresh token not found', AuthController.name);
