@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { AddressesService } from './addresses.service';
 import { CreateAddressDto } from '../../dto/address/create-address.dto';
@@ -37,6 +38,19 @@ export class AddressesController {
   @ApiResponse({ status: 500, description: 'Internal server error.' })
   async findAll() {
     return await this.addressesService.findAll();
+  }
+
+  @Get('my-address')
+  @ApiOperation({ summary: 'Get address for user' })
+  @ApiResponse({ status: 200, description: 'Address fetched successfully.' })
+  async myAddress(@Req() req: any) {
+    Logger.log('User ID: ' + req.userId);
+    const { userId } = req;
+    const myAddress = await this.addressesService.addressForUser(userId);
+    if (myAddress) {
+      return myAddress;
+    }
+    throw new NotFoundException('This user does not have an address');
   }
 
   @Get(':id')

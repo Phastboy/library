@@ -44,8 +44,12 @@ export class AddressesService {
   }
 
   async addressForUser(userId: string) {
-    return await this.prisma.address.findMany({
+    const userAddress = await this.prisma.address.findUnique({
       where: { userId },
     });
+    if (userAddress) {
+      return userAddress;
+    }
+    return null;
   }
 }
