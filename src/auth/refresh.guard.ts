@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { TokenService } from 'src/token/token.service';
-import { AuthenticatedRequest } from 'src/types';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -16,7 +15,7 @@ export class RefreshGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: AuthenticatedRequest = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest();
     const token = this.tokenService.extractTokenFromCookie(
       request.headers?.cookie,
       'refreshToken',
