@@ -10,9 +10,10 @@ import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/dto/user/create-user.dto';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { User, UserCriteria, Profile } from 'src/types';
+import { UserCriteria, Profile } from 'src/types';
 import { MailService } from 'src/mail/mail.service';
 import { generateVerificationEmailContent } from 'src/mail/mail.helpers';
+import { generateLink } from 'src/utils/link.util';
 
 @Injectable()
 export class UsersService {
@@ -23,7 +24,7 @@ export class UsersService {
   ) {}
 
   async sendEmailVerificationEmail(email: string, token: string) {
-    const verificationLink = this.generateLink({
+    const verificationLink = generateLink({
       endpoint: '/verify-email',
       query: { token },
     });
@@ -89,95 +90,27 @@ export class UsersService {
       });
       Logger.log('User created successfully', UsersService.name);
 
-      return result as User;
+      return result;
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw new BadRequestException('Error creating user');
     }
   }
 
-  async generateEmailVerificationToken(payload: User): Promise<string> {
-    Logger.log(
-      'Received request to generate email verification token',
-      UsersService.name,
-    );
-    try {
-      // Check if the user exists
-      Logger.log('Checking if user exists...', UsersService.name);
-      const user = await this.prisma.user.findUnique({
-        where: { email: payload.email },
-      });
-      if (!user) {
-        Logger.error('User not found', UsersService.name);
-        throw new BadRequestException('User not found');
-      }
-      Logger.log('User found', UsersService.name);
-
-      // Generate the token
-      Logger.log('Generating token...', UsersService.name);
-      const token = await this.tokenService.generate(payload);
-      Logger.log('Token generated', UsersService.name);
-      return token;
-    } catch (error) {
-      Logger.error(error.message, error.stack, UsersService.name);
-      throw new InternalServerErrorException(
-        'Error generating email verification token',
-      );
-    }
-  }
-
-  async verifyEmailVerificationToken(token: string) {
+  async verifyEmail(token: string) {
     Logger.log(
       'Received request to verify email verification token',
       UsersService.name,
     );
-    if (!token || typeof token !== 'string') {
-      Logger.error(
-        'Invalid token: Token is required and must be a string',
-        UsersService.name,
-      );
-      throw new BadRequestException('Invalid token');
-    }
-    try {
-      // Verify the token
-      Logger.log('Verifying token...', UsersService.name);
-      const payload = await this.tokenService.verify(token);
-      Logger.log(`Token verified: ${payload}`, UsersService.name);
-
-      // update the user's email verification status
-      Logger.log(
-        'Updating user email verification status...',
-        UsersService.name,
-      );
-      await this.prisma.user.update({
-        where: { id: payload },
-        data: { emailIsVerified: true },
-      });
-      return payload;
-    } catch (error) {
-      Logger.error(error.message, error.stack, UsersService.name);
-      if (error.name === 'TokenExpiredError') {
-        throw new BadRequestException('Token has expired');
-      }
-      throw new BadRequestException('Invalid token');
-    }
-  }
-
-  generateLink(args: {
-    endpoint: string;
-    query?: Record<string, string>;
-  }): string {
-    const baseUrl = process.env.API_URL || 'http://localhost:8080';
-    const url = new URL(args.endpoint, baseUrl);
-
-    if (args.query) {
-      Object.entries(args.query).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
-      });
-    }
-
-    Logger.log(`Generated link: ${url.toString()}`, 'generateLink');
-    return url.toString();
+    const id = await this.tokenService.verify(token);
+    Logger.log(`Token verified for user with id ${id}`, UsersService.name);
+    // update the user's email verification status
+    const { email, username, emailIsVerified } = await this.prisma.user.update({
+      where: { id },
+      data: { emailIsVerified: true },
+    });
+    Logger.log(`${username} email verified`, UsersService.name);
+    return { id, email, username, emailIsVerified };
   }
 
   async findAll() {

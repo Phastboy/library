@@ -1,16 +1,26 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { Tokens } from 'src/types';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import * as argon2 from 'argon2';
 import { TokenService } from 'src/token/token.service';
+import { ChangePasswordDto } from 'src/dto/auth/password.dto';
+import { MailService } from 'src/mail/mail.service';
+import { generateLink } from 'src/utils/link.util';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private tokenService: TokenService,
+    private mailService: MailService,
   ) {}
 
   public cookieOptions = {
@@ -23,7 +33,7 @@ export class AuthService {
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
     const user = await this.userService.create(createUserDto);
-    const token = await this.userService.generateEmailVerificationToken(user);
+    const token = await this.tokenService.generate(user.id);
     await this.userService.sendEmailVerificationEmail(user.email, token);
     return user.id;
   }
@@ -68,12 +78,9 @@ export class AuthService {
   async verifyEmail(token: string) {
     Logger.log('Received request to verify email', AuthService.name);
     try {
-      const data = await this.userService.verifyEmailVerificationToken(token);
+      const data = await this.userService.verifyEmail(token);
       if (data) {
-        return {
-          message: 'Email verified successfully',
-          data,
-        };
+        return data;
       }
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);
@@ -126,5 +133,63 @@ export class AuthService {
       Logger.error(error.message, error.stack, AuthService.name);
       throw error;
     }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.userService.find(AuthService, { email });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const token = await this.tokenService.generate(user.id);
+    const resetLink = generateLink({
+      endpoint: '/reset-password',
+      query: { token },
+    });
+
+    await this.mailService.sendEmail(
+      email,
+      'Password Reset Request',
+      `Click the link to reset your password: ${resetLink}`,
+    );
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const user = await this.userService.find(AuthService, { id: userId });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isPasswordValid = await argon2.verify(
+      user.password,
+      changePasswordDto.currentPassword,
+    );
+    if (!isPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // check if new password is the same as the current password
+    const newPasswordIsCurrentPassword = await argon2.verify(
+      user.password,
+      changePasswordDto.newPassword,
+    );
+    if (newPasswordIsCurrentPassword) {
+      throw new BadRequestException(
+        'New password cannot be the same as the current password',
+      );
+    }
+    const hashedPassword = await argon2.hash(changePasswordDto.newPassword);
+    await this.userService.update(userId, { password: hashedPassword });
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const userId = await this.tokenService.verify(token);
+    const user = await this.userService.find(AuthService, { id: userId });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const hashedPassword = await argon2.hash(newPassword);
+    await this.userService.update(userId, { password: hashedPassword });
   }
 }
