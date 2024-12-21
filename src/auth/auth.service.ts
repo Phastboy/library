@@ -70,10 +70,7 @@ export class AuthService {
     try {
       const data = await this.userService.verifyEmail(token);
       if (data) {
-        return {
-          message: 'Email verified successfully',
-          data,
-        };
+        return data;
       }
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthService.name);

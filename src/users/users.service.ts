@@ -102,13 +102,14 @@ export class UsersService {
       UsersService.name,
     );
     const id = await this.tokenService.verify(token);
+    Logger.log(`Token verified for user with id ${id}`, UsersService.name);
     // update the user's email verification status
     const { email, username, emailIsVerified } = await this.prisma.user.update({
       where: { id },
       data: { emailIsVerified: true },
     });
     Logger.log(`${username} email verified`, UsersService.name);
-    return { email, username, emailIsVerified };
+    return { id, email, username, emailIsVerified };
   }
 
   generateLink(args: {

@@ -30,10 +30,10 @@ export class TokenService {
     return secret;
   }
 
-  async generate(id: string): Promise<string> {
+  async generate(userId: string): Promise<string> {
     const secret = this.getSecret();
     return this.jwtService.sign(
-      { id },
+      { userId },
       {
         secret,
         expiresIn: this.TokenExpiresIn,

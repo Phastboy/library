@@ -8,6 +8,7 @@ import {
   Req,
   Res,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
@@ -22,6 +23,9 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from './auth.guard';
 import { RefreshGuard } from './refresh.guard';
+import { Response } from 'express';
+import { response } from 'src/utils/response.util';
+import { setAuthCookies } from 'src/utils/cookie.util';
 
 @ApiTags('authentication')
 @Controller('')
@@ -42,13 +46,9 @@ export class AuthController {
         await this.tokenService.authTokens(data);
 
       // set cookies
-      await res.cookie('accessToken', accessToken, {
+      setAuthCookies(res, accessToken, refreshToken, {
         ...this.authService.cookieOptions,
-        maxAge: 24 * 60 * 60 * 1000,
-      });
-      await res.cookie('refreshToken', refreshToken, {
-        ...this.authService.cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        sameSite: 'strict',
       });
       Logger.log(`cookies set`, AuthController.name);
 
@@ -70,16 +70,17 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Email successfully verified.' })
   @ApiResponse({ status: 400, description: 'Invalid token.' })
-  async verifyEmail(@Query('token') token: string) {
+  async verifyEmail(@Query('token') token: string, @Res() res: Response) {
     Logger.log(
       `Received request to verify email with token ${token}`,
       AuthController.name,
     );
     try {
       if (!token) {
-        throw new Error('Token is required');
+        throw new BadRequestException('Token is required');
       }
-      return await this.authService.verifyEmail(token);
+      const data = await this.authService.verifyEmail(token);
+      return response(res, 200, 'Email successfully verified', data);
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -97,14 +98,12 @@ export class AuthController {
         await this.authService.login(loginDto);
 
       // set cookies
-      await res.cookie('accessToken', accessToken, {
-        ...this.authService.cookieOptions,
-        maxAge: 24 * 60 * 60 * 1000,
-      });
-      await res.cookie('refreshToken', refreshToken, {
-        ...this.authService.cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      setAuthCookies(
+        res,
+        accessToken,
+        refreshToken,
+        this.authService.cookieOptions,
+      );
       Logger.log(`cookies set`, AuthController.name);
 
       Logger.log(
@@ -141,14 +140,12 @@ export class AuthController {
         await this.authService.refreshTokens(token);
 
       // set cookies
-      await res.cookie('accessToken', accessToken, {
-        ...this.authService.cookieOptions,
-        maxAge: 24 * 60 * 60 * 1000,
-      });
-      await res.cookie('refreshToken', refreshToken, {
-        ...this.authService.cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      setAuthCookies(
+        res,
+        accessToken,
+        refreshToken,
+        this.authService.cookieOptions,
+      );
       Logger.log(`cookies set`, AuthController.name);
 
       return res.json({
