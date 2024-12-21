@@ -10,9 +10,10 @@ import * as argon2 from 'argon2';
 import { CreateUserDto } from 'src/dto/user/create-user.dto';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { TokenService } from 'src/token/token.service';
-import { User, UserCriteria, Profile } from 'src/types';
+import { UserCriteria, Profile } from 'src/types';
 import { MailService } from 'src/mail/mail.service';
 import { generateVerificationEmailContent } from 'src/mail/mail.helpers';
+import { generateLink } from 'src/utils/link.util';
 
 @Injectable()
 export class UsersService {
@@ -23,7 +24,7 @@ export class UsersService {
   ) {}
 
   async sendEmailVerificationEmail(email: string, token: string) {
-    const verificationLink = this.generateLink({
+    const verificationLink = generateLink({
       endpoint: '/verify-email',
       query: { token },
     });
@@ -110,23 +111,6 @@ export class UsersService {
     });
     Logger.log(`${username} email verified`, UsersService.name);
     return { id, email, username, emailIsVerified };
-  }
-
-  generateLink(args: {
-    endpoint: string;
-    query?: Record<string, string>;
-  }): string {
-    const baseUrl = process.env.API_URL || 'http://localhost:8080';
-    const url = new URL(args.endpoint, baseUrl);
-
-    if (args.query) {
-      Object.entries(args.query).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
-      });
-    }
-
-    Logger.log(`Generated link: ${url.toString()}`, 'generateLink');
-    return url.toString();
   }
 
   async findAll() {

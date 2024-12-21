@@ -9,6 +9,7 @@ import {
   Res,
   UseGuards,
   BadRequestException,
+  Patch,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
@@ -26,6 +27,7 @@ import { RefreshGuard } from './refresh.guard';
 import { Response } from 'express';
 import { response } from 'src/utils/response.util';
 import { setAuthCookies } from 'src/utils/cookie.util';
+import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from 'src/dto/auth/password.dto';
 
 @ApiTags('authentication')
 @Controller('')
@@ -190,6 +192,58 @@ export class AuthController {
       return res.json({
         message: 'Logout successful',
       });
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('change-password')
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async changePassword(@Req() req: any, @Body() changePasswordDto: ChangePasswordDto, @Res() res: Response) {
+    Logger.log('Received request to change password', AuthController.name);
+    try {
+      await this.authService.changePassword(req.userId, changePasswordDto);
+      return response(res, 200, 'Password changed successfully');
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response) {
+    Logger.log('Received request to reset password', AuthController.name);
+    try {
+      await this.authService.forgotPassword(forgotPasswordDto.email);
+      return response(res, 200, 'Password reset email sent');
+    } catch (error: any) {
+      Logger.error(error.message, error.stack, AuthController.name);
+      throw error;
+    }
+  }
+
+  @Patch('reset-password')
+  @ApiQuery({
+    name: 'token',
+    type: 'string',
+    required: true,
+  })
+  @ApiOperation({ summary: 'Reset user password' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto, @Query('token') token: string, @Res() res: Response) {
+    Logger.log('Received request to reset password', AuthController.name);
+    try {
+      await this.authService.resetPassword(token, resetPasswordDto.newPassword);
+      return response(res, 200, 'Password reset successfully');
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
