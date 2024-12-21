@@ -21,13 +21,18 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiBody,
 } from '@nestjs/swagger';
 import { AuthGuard } from './auth.guard';
 import { RefreshGuard } from './refresh.guard';
 import { Response } from 'express';
 import { response } from 'src/utils/response.util';
+import {
+  ChangePasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from 'src/dto/auth/password.dto';
 import { setAuthCookies } from 'src/utils/cookie.util';
-import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from 'src/dto/auth/password.dto';
 
 @ApiTags('authentication')
 @Controller('')
@@ -41,7 +46,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully registered.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async create(@Body() createUserDto: CreateUserDto, @Res() res: any) {
+  async create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
       const data = await this.authService.create(createUserDto);
       const { accessToken, refreshToken } =
@@ -54,9 +59,7 @@ export class AuthController {
       });
       Logger.log(`cookies set`, AuthController.name);
 
-      return res.json({
-        message: 'Registration successful',
-      });
+      return response(res, 201, 'Registration successful');
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -91,9 +94,18 @@ export class AuthController {
 
   @Post('/login')
   @ApiOperation({ summary: 'Login user' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'Pas$word123' },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async login(@Body() loginDto: LoginDto, @Res() res: any) {
+  async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     Logger.log('Received request to login', AuthController.name);
     try {
       const { accessToken, refreshToken } =
@@ -112,9 +124,7 @@ export class AuthController {
         `Login successful for user with email ${loginDto.email}`,
         AuthController.name,
       );
-      return res.json({
-        message: 'Login successful',
-      });
+      return response(res, 200, 'Login successful');
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -127,7 +137,7 @@ export class AuthController {
   @ApiCookieAuth('refreshToken')
   @ApiResponse({ status: 200, description: 'Tokens refreshed successfully.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async refreshTokens(@Req() req: any, @Res() res: any) {
+  async refreshTokens(@Req() req: any, @Res() res: Response) {
     Logger.log('Received request to refresh tokens', AuthController.name);
     try {
       Logger.log(
@@ -150,9 +160,7 @@ export class AuthController {
       );
       Logger.log(`cookies set`, AuthController.name);
 
-      return res.json({
-        message: 'Tokens refreshed successfully',
-      });
+      return response(res, 200, 'Tokens refreshed successfully');
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -164,7 +172,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async logout(@Req() req: any, @Res() res: any) {
+  async logout(@Req() req: any, @Res() res: Response) {
     Logger.log('Received request to logout', AuthController.name);
     try {
       const cookies = req.headers?.cookie;
@@ -185,13 +193,17 @@ export class AuthController {
       await this.authService.logout(accessToken);
 
       // clear cookies
-      await res.clearCookie('accessToken', this.authService.cookieOptions);
-      await res.clearCookie('refreshToken', this.authService.cookieOptions);
+      await res.clearCookie('accessToken', {
+        ...this.authService.cookieOptions,
+        sameSite: 'strict',
+      });
+      await res.clearCookie('refreshToken', {
+        ...this.authService.cookieOptions,
+        sameSite: 'strict',
+      });
       Logger.log(`cookies cleared`, AuthController.name);
 
-      return res.json({
-        message: 'Logout successful',
-      });
+      return response(res, 200, 'Logout successful');
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -204,7 +216,11 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password changed successfully.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async changePassword(@Req() req: any, @Body() changePasswordDto: ChangePasswordDto, @Res() res: Response) {
+  async changePassword(
+    @Req() req: any,
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Res() res: Response,
+  ) {
     Logger.log('Received request to change password', AuthController.name);
     try {
       await this.authService.changePassword(req.userId, changePasswordDto);
@@ -219,7 +235,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Password reset email sent.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response) {
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+    @Res() res: Response,
+  ) {
     Logger.log('Received request to reset password', AuthController.name);
     try {
       await this.authService.forgotPassword(forgotPasswordDto.email);
@@ -239,7 +258,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset user password' })
   @ApiResponse({ status: 200, description: 'Password reset successfully.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto, @Query('token') token: string, @Res() res: Response) {
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @Query('token') token: string,
+    @Res() res: Response,
+  ) {
     Logger.log('Received request to reset password', AuthController.name);
     try {
       await this.authService.resetPassword(token, resetPasswordDto.newPassword);

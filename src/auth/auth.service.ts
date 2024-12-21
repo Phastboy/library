@@ -169,9 +169,14 @@ export class AuthService {
     }
 
     // check if new password is the same as the current password
-    const newPasswordIsCurrentPassword = await argon2.verify(user.password, changePasswordDto.newPassword,);
+    const newPasswordIsCurrentPassword = await argon2.verify(
+      user.password,
+      changePasswordDto.newPassword,
+    );
     if (newPasswordIsCurrentPassword) {
-      throw new BadRequestException('New password cannot be the same as the current password');
+      throw new BadRequestException(
+        'New password cannot be the same as the current password',
+      );
     }
     const hashedPassword = await argon2.hash(changePasswordDto.newPassword);
     await this.userService.update(userId, { password: hashedPassword });

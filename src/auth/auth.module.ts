@@ -15,7 +15,7 @@ import { MailService } from 'src/mail/mail.service';
       global: true,
     }),
     TokenModule,
-    MailModule
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, TokenService, MailService],
