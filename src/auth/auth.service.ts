@@ -23,7 +23,7 @@ export class AuthService {
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
     const user = await this.userService.create(createUserDto);
-    const token = await this.userService.generateEmailVerificationToken(user);
+    const token = await this.tokenService.generate(user.id);
     await this.userService.sendEmailVerificationEmail(user.email, token);
     return user.id;
   }
@@ -68,7 +68,7 @@ export class AuthService {
   async verifyEmail(token: string) {
     Logger.log('Received request to verify email', AuthService.name);
     try {
-      const data = await this.userService.verifyEmailVerificationToken(token);
+      const data = await this.userService.verifyEmail(token);
       if (data) {
         return {
           message: 'Email verified successfully',
