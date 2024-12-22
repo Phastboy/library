@@ -5,15 +5,15 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
-import { CreateUserDto } from 'src/dto/user/create-user.dto';
-import { UpdateUserDto } from 'src/dto/user/update-user.dto';
-import { TokenService } from 'src/token/token.service';
+import { CreateUserDto } from '../dto/user/create-user.dto';
+import { UpdateUserDto } from '../dto/user/update-user.dto';
+import { TokenService } from '../token/token.service';
 import { UserCriteria, Profile } from 'src/types';
-import { MailService } from 'src/mail/mail.service';
-import { generateVerificationEmailContent } from 'src/mail/mail.helpers';
-import { generateLink } from 'src/utils/link.util';
+import { MailService } from '../mail/mail.service';
+import { generateVerificationEmailContent } from '../mail/mail.helpers';
+import { generateLink } from '../utils/link.util';
 
 @Injectable()
 export class UsersService {

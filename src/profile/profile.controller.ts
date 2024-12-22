@@ -53,7 +53,11 @@ export class ProfileController {
   @ApiOperation({ summary: 'Update user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto, @Res() res: any) {
+  async update(
+    @Req() req: any,
+    @Body() updateUserDto: UpdateUserDto,
+    @Res() res: any,
+  ) {
     Logger.log('Received request to update profile', ProfileController.name);
     try {
       Logger.log(
