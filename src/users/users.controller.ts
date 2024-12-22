@@ -1,4 +1,12 @@
-import { Controller, Get, Logger, Param, Delete, UseGuards, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Logger,
+  Param,
+  Delete,
+  UseGuards,
+  Res,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';

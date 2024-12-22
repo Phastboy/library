@@ -16,7 +16,11 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+      expect(appController.getHello()).toEqual({
+        title: 'Library',
+        description:
+          'A library management system where users can browse and borrow books, manage their accounts, and interact with library staff. The platform aims to provide a seamless experience for both library patrons and administrators.',
+      });
     });
   });
 });

@@ -40,7 +40,7 @@ describe('generateLink', () => {
       query: { key: 'value with spaces', 'key/special': 'value&special' },
     });
     expect(result).toBe(
-      'https://api.example.com/test?key=value+with+spaces&key%2Fspecial=value%26special'
+      'https://api.example.com/test?key=value+with+spaces&key%2Fspecial=value%26special',
     );
   });
 

@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { TokenService } from './token.service';
-import { UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 describe('TokenService', () => {
   let service: TokenService;
@@ -50,7 +53,10 @@ describe('TokenService', () => {
       const userId = '123';
       const accessToken = 'accessToken';
       const refreshToken = 'refreshToken';
-      jest.spyOn(jwtService, 'sign').mockReturnValueOnce(accessToken).mockReturnValueOnce(refreshToken);
+      jest
+        .spyOn(jwtService, 'sign')
+        .mockReturnValueOnce(accessToken)
+        .mockReturnValueOnce(refreshToken);
 
       const result = await service.authTokens(userId);
 
@@ -75,7 +81,9 @@ describe('TokenService', () => {
       const result = await service.verify(token);
 
       expect(result).toBe(userId);
-      expect(jwtService.verify).toHaveBeenCalledWith(token, { secret: expect.any(String) });
+      expect(jwtService.verify).toHaveBeenCalledWith(token, {
+        secret: expect.any(String),
+      });
     });
 
     it('should throw UnauthorizedException if token is expired', async () => {
@@ -84,7 +92,9 @@ describe('TokenService', () => {
         throw { name: 'TokenExpiredError' };
       });
 
-      await expect(service.verify(token)).rejects.toThrow(UnauthorizedException);
+      await expect(service.verify(token)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if token is malformed', async () => {
@@ -93,7 +103,9 @@ describe('TokenService', () => {
         throw { name: 'JsonWebTokenError' };
       });
 
-      await expect(service.verify(token)).rejects.toThrow(UnauthorizedException);
+      await expect(service.verify(token)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if token is invalid', async () => {
@@ -102,7 +114,9 @@ describe('TokenService', () => {
         throw new Error();
       });
 
-      await expect(service.verify(token)).rejects.toThrow(UnauthorizedException);
+      await expect(service.verify(token)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -144,7 +158,9 @@ describe('TokenService', () => {
     it('should throw InternalServerErrorException if secret is not set', () => {
       delete process.env.JWT_SECRET;
 
-      expect(() => (service as any).getSecret()).toThrow(InternalServerErrorException);
+      expect(() => (service as any).getSecret()).toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 });
