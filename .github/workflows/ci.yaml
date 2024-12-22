@@ -1,13 +1,6 @@
-name: Run Jest Tests
+name: CI
 
-on:
-  push:
-    branches:
-      - main
-      - tests-and-fixes
-  pull_request:
-    branches:
-      - main
+on: [ push, pull_request ]
 
 jobs:
   test:
@@ -27,3 +20,4 @@ jobs:
 
       - name: Run Jest tests
         run: npm test
+        continue-on-error: false
