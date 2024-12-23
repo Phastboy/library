@@ -5,13 +5,13 @@
 ### User
 #### Authentication
 - [X] Sign up
-- [ ] Sign in
-- [ ] Sign out
+- [X] Sign in
+- [X] Sign out
 
 #### Profile Management
-- [ ] View profile
-- [ ] Edit profile
-- [ ] Delete profile
+- [X] View profile
+- [X] Edit profile
+- [X] Delete profile
 
 ### Book
 #### Book browsing and searching
