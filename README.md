@@ -50,7 +50,7 @@ The project is built using the following technologies:
 - **MongoDB**: A general-purpose, document-based, distributed database built for modern application developers and for the cloud era.
 
 ## API Documentation
-The API documentation is available [here](https://library-czvh.onrender.com/api/docs).
+The API documentation is available [here](https://library-czvh.onrender.com/docs).
 
 
 ## Deployment
