@@ -57,6 +57,7 @@ export class UsersService {
     return null;
   }
 
+  // try to make this atomic
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
 
@@ -89,6 +90,9 @@ export class UsersService {
         },
       });
       Logger.log('User created successfully', UsersService.name);
+
+      // geneate tokens
+      // send verification email
 
       return result;
     } catch (error) {
