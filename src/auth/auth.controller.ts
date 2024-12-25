@@ -59,7 +59,11 @@ export class AuthController {
       });
       Logger.log(`cookies set`, AuthController.name);
 
-      return response(res, 201, 'Registration successful');
+      return response.send({
+        res,
+        statusCode: 201,
+        message: 'User successfully registered',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -85,7 +89,12 @@ export class AuthController {
         throw new BadRequestException('Token is required');
       }
       const data = await this.authService.verifyEmail(token);
-      return response(res, 200, 'Email successfully verified', data);
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Email successfully verified',
+        data,
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -124,7 +133,11 @@ export class AuthController {
         `Login successful for user with email ${loginDto.email}`,
         AuthController.name,
       );
-      return response(res, 200, 'Login successful');
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Login successful',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -160,7 +173,11 @@ export class AuthController {
       );
       Logger.log(`cookies set`, AuthController.name);
 
-      return response(res, 200, 'Tokens refreshed successfully');
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Tokens refreshed successfully',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -203,7 +220,11 @@ export class AuthController {
       });
       Logger.log(`cookies cleared`, AuthController.name);
 
-      return response(res, 200, 'Logout successful');
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Logout successful',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -224,7 +245,11 @@ export class AuthController {
     Logger.log('Received request to change password', AuthController.name);
     try {
       await this.authService.changePassword(req.userId, changePasswordDto);
-      return response(res, 200, 'Password changed successfully');
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Password changed successfully',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -242,7 +267,11 @@ export class AuthController {
     Logger.log('Received request to reset password', AuthController.name);
     try {
       await this.authService.forgotPassword(forgotPasswordDto.email);
-      return response(res, 200, 'Password reset email sent');
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Password reset email sent',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;
@@ -266,7 +295,11 @@ export class AuthController {
     Logger.log('Received request to reset password', AuthController.name);
     try {
       await this.authService.resetPassword(token, resetPasswordDto.newPassword);
-      return response(res, 200, 'Password reset successfully');
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Password reset successfully',
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
       throw error;

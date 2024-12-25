@@ -8,13 +8,14 @@ import {
   Res,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiParam, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/auth/role.guard';
 import { Role } from 'src/types';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { response } from 'src/utils/response.util';
 
+@ApiCookieAuth('accessToken')
 @ApiTags('users')
 @Roles(Role.ADMIN)
 @UseGuards(AuthGuard, RoleGuard)
@@ -30,7 +31,7 @@ export class UsersController {
     Logger.log('Finding all users...', UsersController.name);
     try {
       const data = await this.usersService.findAll();
-      return response(res, 200, 'Users fetched successfully', data);
+      return response.send({res, statusCode: 200, message: 'Users fetched successfully', data});
     } catch (error: any) {
       Logger.error(error.message, error.stack, UsersController.name);
       throw error;
@@ -51,7 +52,7 @@ export class UsersController {
         throw new Error('User not found');
       }
 
-      return response(res, 200, 'User fetched successfully', data);
+      return response.send({res, statusCode: 200, message: 'User fetched successfully', data});
     } catch (error: any) {
       Logger.error(error.message, error.stack, UsersController.name);
       throw error;
@@ -72,7 +73,7 @@ export class UsersController {
         throw new Error('User not found');
       }
 
-      return response(res, 200, 'User deleted successfully');
+      return response.send({res, statusCode: 200, message: 'User deleted successfully'});
     } catch (error: any) {
       Logger.error(error.message, error.stack, UsersController.name);
       throw error;
