@@ -1,2 +1,5 @@
 {
+    "jest.nodeEnv": {
+    "PATH": "/run/user/1000/fnm_multishells/18620_1735080806149/bin/npm"
+}
 }

@@ -1,5 +1,6 @@
 {
     "configurations": [
+        {"type":"node","request":"launch","name":"Run node-gyp-build","runtimeExecutable":"node-gyp-build","cwd":"${workspaceFolder}","args":[]},
         {
             "name": "Docker Node.js Launch",
             "type": "docker",

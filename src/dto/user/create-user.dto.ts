@@ -7,8 +7,8 @@ import {
   IsStrongPassword,
   IsEnum,
 } from 'class-validator';
-import { Role } from 'src/types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -36,11 +36,11 @@ export class CreateUserDto {
   @ApiPropertyOptional({
     description: 'Role of the user',
     enum: Role,
-    default: Role.USER,
+    default: Role.user,
   })
   @IsOptional()
   @IsEnum(Role)
-  role?: Role = Role.USER;
+  role?: Role = Role.user;
 
   @ApiPropertyOptional({
     description: 'Phone number of the user',

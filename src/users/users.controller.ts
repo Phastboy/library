@@ -23,7 +23,7 @@ import { response } from 'src/utils/response.util';
 
 @ApiCookieAuth('accessToken')
 @ApiTags('users')
-@Roles(Role.ADMIN)
+@Roles(Role.admin)
 @UseGuards(AuthGuard, RoleGuard)
 @Controller('users')
 export class UsersController {
