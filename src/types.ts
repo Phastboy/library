@@ -36,6 +36,7 @@ export interface UserCriteria {
 }
 
 export interface Profile {
+  id: string;
   email: string;
   username: string;
   role: $Enums.Role;

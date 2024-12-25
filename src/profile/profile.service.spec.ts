@@ -95,6 +95,7 @@ describe('ProfileService', () => {
         username: 'updateduser',
       };
       const updatedUser = {
+        id: '1',
         email: 'updated@example.com',
         username: 'updateduser',
         role: Role.user,
@@ -109,6 +110,7 @@ describe('ProfileService', () => {
       const result = await service.update(userId, updateUserDto);
 
       expect(result).toEqual({
+        id: '1',
         email: 'updated@example.com',
         username: 'updateduser',
         role: 'user',
