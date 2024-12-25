@@ -10,7 +10,12 @@ import {
   Res,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
-import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCookieAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UpdateUserDto } from 'src/dto/user/update-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { AuthService } from 'src/auth/auth.service';
@@ -42,8 +47,13 @@ export class ProfileController {
         Logger.error('User id is required', ProfileController.name);
         throw new Error('User id is required');
       }
-      const profile = await this.profileService.read(req.userId);
-      return response.send({res, statusCode: 200, message: 'Profile retrieved successfully', data: profile});
+      const user = await this.profileService.read(req.userId);
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Profile retrieved successfully',
+        data: { user },
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, ProfileController.name);
       throw error;
@@ -70,8 +80,13 @@ export class ProfileController {
         throw new Error('User id is required');
       }
       const id = req.userId;
-      const updated = await this.profileService.update(id, updateUserDto);
-      return response.send({res, statusCode: 200, message: 'Profile updated successfully', data: updated});
+      const user = await this.profileService.update(id, updateUserDto);
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Profile updated successfully',
+        data: { user },
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, ProfileController.name);
       throw error;
@@ -94,7 +109,12 @@ export class ProfileController {
         `Profile deleted for user with id ${id}`,
         ProfileController.name,
       );
-      return response.send({res, statusCode: 200, message: 'Profile deleted successfully', data: deleted});
+      return response.send({
+        res,
+        statusCode: 200,
+        message: 'Profile deleted successfully',
+        data: deleted,
+      });
     } catch (error: any) {
       Logger.error(error.message, error.stack, ProfileController.name);
       throw error;

@@ -13,7 +13,7 @@ export const response = {
     res: Response;
     statusCode: number;
     message: string;
-    data?: any;
+    data?: object;
     error?: any;
     meta?: any;
     timestamp?: boolean;

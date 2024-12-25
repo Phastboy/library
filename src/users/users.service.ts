@@ -88,45 +88,48 @@ export class UsersService {
     const token = await this.tokenService.generate(data.email);
 
     // Perform all operations within a single transaction
-    const transaction = await this.prisma.$transaction(async (prisma) => {
-      try {
-        // Create the user
-        const user = await prisma.user.create({
-          data: {
-            ...data,
-            password: hashedPassword,
-            username,
-          },
-        });
+    const transaction = await this.prisma.$transaction(
+      async (prisma) => {
+        try {
+          // Create the user
+          const user = await prisma.user.create({
+            data: {
+              ...data,
+              password: hashedPassword,
+              username,
+            },
+          });
 
-        // Send email verification email
-        await this.sendEmailVerificationEmail(user.email, token);
-        Logger.log('Email verification email sent', UsersService.name);
+          // Send email verification email
+          await this.sendEmailVerificationEmail(user.email, token);
+          Logger.log('Email verification email sent', UsersService.name);
 
-        // generate auth tokens
-        const { accessToken, refreshToken } =
-          await this.tokenService.authTokens(user.id);
+          // generate auth tokens
+          const { accessToken, refreshToken } =
+            await this.tokenService.authTokens(user.id);
 
-        // persist refresh token with argon2 hash
-        const hashedRefreshToken = await argon2.hash(refreshToken);
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { refreshToken: hashedRefreshToken },
-        });
-        Logger.log('Refresh token persisted', UsersService.name);
+          // persist refresh token with argon2 hash
+          const hashedRefreshToken = await argon2.hash(refreshToken);
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { refreshToken: hashedRefreshToken },
+          });
+          Logger.log('Refresh token persisted', UsersService.name);
 
-        // strip sensitive fields
-        const details = this.stripSensitiveFields(user);
+          // strip sensitive fields
+          const details = this.stripSensitiveFields(user);
 
-        return { details, accessToken, refreshToken };
-      } catch (error) {
-        Logger.error(error.message, error.stack, UsersService.name);
-        throw new InternalServerErrorException(
-          'Error creating user',
-          error.message,
-        );
-      }
-    }, { timeout: 10000 });
+          return { details, accessToken, refreshToken };
+        } catch (error) {
+          Logger.error(error.message, error.stack, UsersService.name);
+          throw new InternalServerErrorException(
+            'Error creating user',
+            error.message,
+          );
+        }
+      },
+      { timeout: 10000 },
+    );
 
     Logger.log('User created', UsersService.name);
     return transaction;

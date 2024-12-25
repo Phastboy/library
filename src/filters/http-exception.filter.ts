@@ -26,14 +26,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const error =
       exception instanceof HttpException
-        ? (typeof message === 'string' ? message : (message as any).error)
+        ? typeof message === 'string'
+          ? message
+          : (message as any).error
         : 'Unknown error';
 
     response.send({
       res,
       statusCode: status,
       message: typeof message === 'string' ? message : (message as any).message,
-      error: status === HttpStatus.INTERNAL_SERVER_ERROR ? 'Internal server error' : error,
+      error:
+        status === HttpStatus.INTERNAL_SERVER_ERROR
+          ? 'Internal server error'
+          : error,
       timestamp: true,
     });
   }

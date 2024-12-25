@@ -49,8 +49,9 @@ export class AuthController {
   @ApiResponse({ status: 500, description: 'Internal server error.' })
   async create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
-      const { accessToken, refreshToken } =
+      const { details, accessToken, refreshToken } =
         await this.authService.create(createUserDto);
+      const user = details;
 
       // set cookies
       setAuthCookies(res, accessToken, refreshToken, {
@@ -63,6 +64,7 @@ export class AuthController {
         res,
         statusCode: 201,
         message: 'User successfully registered',
+        data: { user },
       });
     } catch (error: any) {
       Logger.error(error.message, error.stack, AuthController.name);
