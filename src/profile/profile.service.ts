@@ -22,9 +22,9 @@ export class ProfileService {
   async update(userId: string, updateUserDto: UpdateUserDto): Promise<Profile> {
     Logger.log('Received request to update profile', ProfileService.name);
     try {
-      const { id, refreshToken, password, ...profile } =
-        await this.userService.find(ProfileService, { id: userId });
-      return profile;
+      const user =
+        await this.userService.update(userId, updateUserDto);
+      return user;
     } catch (error: any) {
       Logger.error(error.message, error.stack, ProfileService.name);
       throw error;

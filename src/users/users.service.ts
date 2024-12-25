@@ -202,7 +202,7 @@ export class UsersService {
     return userId;
   }
 
-  private stripSensitiveFields(user: any) {
+  stripSensitiveFields(user: any) {
     const { password, refreshToken, ...rest } = user;
     return rest;
   }
