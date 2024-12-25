@@ -57,6 +57,7 @@ export class UsersService {
     return null;
   }
 
+  // try to make this atomic
   async create(data: CreateUserDto) {
     Logger.log('Received request to create user', UsersService.name);
 
@@ -67,34 +68,71 @@ export class UsersService {
     );
     const username =
       data.username || `${data.email.split('@')[0]}_${Date.now()}`;
-    const user = await this.find(UsersService, { email: data.email, username });
-    if (user && user.email === data.email) {
+    const userExists = await this.find(UsersService, {
+      email: data.email,
+      username,
+    });
+    if (userExists && userExists.email === data.email) {
       Logger.error('Email already exists', UsersService.name);
       throw new BadRequestException('Email already exists');
     }
-    if (user && user.username === username) {
+    if (userExists && userExists.username === username) {
       Logger.error('Username already exists', UsersService.name);
       throw new BadRequestException('Username already exists');
     }
 
-    // Hash the password and create the user
+    // Hash the password
     const hashedPassword = await argon2.hash(data.password);
-    try {
-      const { password, ...result } = await this.prisma.user.create({
-        data: {
-          email: data.email,
-          username,
-          password: hashedPassword,
-          role: data.role,
-        },
-      });
-      Logger.log('User created successfully', UsersService.name);
 
-      return result;
-    } catch (error) {
-      Logger.error(error.message, error.stack, UsersService.name);
-      throw new BadRequestException('Error creating user');
-    }
+    // Generate email verification token
+    const token = await this.tokenService.generate(data.email);
+
+    // Perform all operations within a single transaction
+    const transaction = await this.prisma.$transaction(
+      async (prisma) => {
+        try {
+          // Create the user
+          const user = await prisma.user.create({
+            data: {
+              ...data,
+              password: hashedPassword,
+              username,
+            },
+          });
+
+          // Send email verification email
+          await this.sendEmailVerificationEmail(user.email, token);
+          Logger.log('Email verification email sent', UsersService.name);
+
+          // generate auth tokens
+          const { accessToken, refreshToken } =
+            await this.tokenService.authTokens(user.id);
+
+          // persist refresh token with argon2 hash
+          const hashedRefreshToken = await argon2.hash(refreshToken);
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { refreshToken: hashedRefreshToken },
+          });
+          Logger.log('Refresh token persisted', UsersService.name);
+
+          // strip sensitive fields
+          const details = this.stripSensitiveFields(user);
+
+          return { details, accessToken, refreshToken };
+        } catch (error) {
+          Logger.error(error.message, error.stack, UsersService.name);
+          throw new InternalServerErrorException(
+            'Error creating user',
+            error.message,
+          );
+        }
+      },
+      { timeout: 10000 },
+    );
+
+    Logger.log('User created', UsersService.name);
+    return transaction;
   }
 
   async verifyEmail(token: string) {

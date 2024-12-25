@@ -32,10 +32,7 @@ export class AuthService {
 
   async create(createUserDto: CreateUserDto) {
     Logger.log('registering user...', AuthService.name);
-    const user = await this.userService.create(createUserDto);
-    const token = await this.tokenService.generate(user.id);
-    await this.userService.sendEmailVerificationEmail(user.email, token);
-    return user.id;
+    return await this.userService.create(createUserDto);
   }
 
   // login
