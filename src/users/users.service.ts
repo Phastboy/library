@@ -84,6 +84,9 @@ export class UsersService {
     // Hash the password
     const hashedPassword = await argon2.hash(data.password);
 
+    // Generate email verification token
+    const token = await this.tokenService.generate(data.email);
+
     // Perform all operations within a single transaction
     const transaction = await this.prisma.$transaction(async (prisma) => {
       try {
@@ -95,9 +98,6 @@ export class UsersService {
             username,
           },
         });
-
-        // Generate email verification token
-        const token = await this.tokenService.generate(user.id);
 
         // Send email verification email
         await this.sendEmailVerificationEmail(user.email, token);
@@ -126,7 +126,7 @@ export class UsersService {
           error.message,
         );
       }
-    });
+    }, { timeout: 10000 });
 
     Logger.log('User created', UsersService.name);
     return transaction;
