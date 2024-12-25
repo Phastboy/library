@@ -15,46 +15,65 @@ describe('response', () => {
     const statusCode = 200;
     const message = 'Success';
     const data = { id: 1, name: 'Test' };
-    const success = true;
 
-    response(mockResponse as Response, statusCode, message, data, success);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(statusCode);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      success,
+    response.send({
+      res: mockResponse as Response,
+      statusCode,
       message,
       data,
     });
-  });
-
-  it('should send a failed JSON response with default success as true', () => {
-    const statusCode = 400;
-    const message = 'Error occurred';
-    const data = null;
-
-    response(mockResponse as Response, statusCode, message, data);
 
     expect(mockResponse.status).toHaveBeenCalledWith(statusCode);
     expect(mockResponse.json).toHaveBeenCalledWith({
       success: true,
+      status: statusCode,
       message,
-      data,
+      id: 1,
+      name: 'Test',
     });
   });
 
-  it('should override the success flag when provided', () => {
-    const statusCode = 500;
-    const message = 'Internal server error';
-    const data = null;
-    const success = false;
+  it('should send a failed JSON response with error', () => {
+    const statusCode = 400;
+    const message = 'Error occurred';
+    const error = 'Invalid input';
 
-    response(mockResponse as Response, statusCode, message, data, success);
+    response.send({
+      res: mockResponse as Response,
+      statusCode,
+      message,
+      error,
+    });
 
     expect(mockResponse.status).toHaveBeenCalledWith(statusCode);
     expect(mockResponse.json).toHaveBeenCalledWith({
-      success,
+      success: false,
+      status: statusCode,
       message,
-      data,
+      error,
     });
+  });
+
+  it('should include timestamp if specified', () => {
+    const statusCode = 200;
+    const message = 'Success';
+    const timestamp = true;
+
+    response.send({
+      res: mockResponse as Response,
+      statusCode,
+      message,
+      timestamp,
+    });
+
+    expect(mockResponse.status).toHaveBeenCalledWith(statusCode);
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        status: statusCode,
+        message,
+        timestamp: expect.any(String),
+      }),
+    );
   });
 });
