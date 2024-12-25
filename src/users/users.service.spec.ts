@@ -327,6 +327,7 @@ describe('UsersService', () => {
       const result = await service.update(userId, updateUserDto);
 
       expect(result).toEqual({
+        id: '1',
         email: 'updated@example.com',
         username: 'updateduser',
         role: Role.user,
