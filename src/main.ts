@@ -16,7 +16,14 @@ async function bootstrap() {
     .addTag('library')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/docs', app, document);
+  SwaggerModule.setup('/docs', app, document, {
+    swaggerOptions: {
+      requestInterceptor: (req: any) => {
+        req.credentials = 'include';
+        return req;
+      },
+    },
+  });
 
   await app.listen(port);
   Logger.log(`app is listening at ${port}`, 'app');

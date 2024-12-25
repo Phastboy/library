@@ -49,9 +49,8 @@ export class AuthController {
   @ApiResponse({ status: 500, description: 'Internal server error.' })
   async create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
-      const data = await this.authService.create(createUserDto);
       const { accessToken, refreshToken } =
-        await this.tokenService.authTokens(data);
+        await this.authService.create(createUserDto);
 
       // set cookies
       setAuthCookies(res, accessToken, refreshToken, {
