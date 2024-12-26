@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { ProfileModule } from './profile/profile.module';
 import { MailModule } from './mail/mail.module';
+import { BooksModule } from './books/books.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MailModule } from './mail/mail.module';
     UsersModule,
     ProfileModule,
     MailModule,
+    BooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
