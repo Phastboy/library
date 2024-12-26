@@ -167,11 +167,10 @@ export class UsersService {
     Logger.log(`Updating user with id ${userId}`, UsersService.name);
     try {
       Logger.log('Updating user...', UsersService.name);
-      const updated =
-        await this.prisma.user.update({
-          where: { id: userId },
-          data,
-        });
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data,
+      });
       Logger.log(`User updated: ${updated}`, UsersService.name);
       return this.stripSensitiveFields(updated);
     } catch (error) {

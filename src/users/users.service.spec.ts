@@ -297,7 +297,9 @@ describe('UsersService', () => {
 
       const result = await service.findAll();
 
-      expect(result).toEqual(users.map((user) => service.stripSensitiveFields(user)));
+      expect(result).toEqual(
+        users.map((user) => service.stripSensitiveFields(user)),
+      );
       expect(prismaService.user.findMany).toHaveBeenCalled();
     });
   });

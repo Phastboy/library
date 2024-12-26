@@ -40,7 +40,9 @@ describe('HttpExceptionFilter', () => {
 
     filter.catch(exception, mockHost as ArgumentsHost);
 
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(mockResponse.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
     expect(mockResponse.json).toHaveBeenCalledWith({
       success: false,
       status: HttpStatus.INTERNAL_SERVER_ERROR,

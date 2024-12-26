@@ -5,7 +5,11 @@ import { TokenService } from '../token/token.service';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { LoginDto } from '../dto/auth/login.dto';
-import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from '../dto/auth/password.dto';
+import {
+  ChangePasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from '../dto/auth/password.dto';
 import { Response } from 'express';
 import { setAuthCookies } from '../utils/cookie.util';
 import { response } from '../utils/response.util';
@@ -117,9 +121,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'create').mockRejectedValue(new Error('User registration failed'));
+      jest
+        .spyOn(authService, 'create')
+        .mockRejectedValue(new Error('User registration failed'));
 
-      await expect(controller.create(createUserDto, mockResponse)).rejects.toThrow('User registration failed');
+      await expect(
+        controller.create(createUserDto, mockResponse),
+      ).rejects.toThrow('User registration failed');
     });
   });
 
@@ -158,9 +166,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'verifyEmail').mockRejectedValue(new Error('Email verification failed'));
+      jest
+        .spyOn(authService, 'verifyEmail')
+        .mockRejectedValue(new Error('Email verification failed'));
 
-      await expect(controller.verifyEmail(token, mockResponse)).rejects.toThrow('Email verification failed');
+      await expect(controller.verifyEmail(token, mockResponse)).rejects.toThrow(
+        'Email verification failed',
+      );
     });
   });
 
@@ -208,9 +220,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'login').mockRejectedValue(new Error('Login failed'));
+      jest
+        .spyOn(authService, 'login')
+        .mockRejectedValue(new Error('Login failed'));
 
-      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow('Login failed');
+      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow(
+        'Login failed',
+      );
     });
   });
 
@@ -256,9 +272,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'refreshTokens').mockRejectedValue(new Error('Token refresh failed'));
+      jest
+        .spyOn(authService, 'refreshTokens')
+        .mockRejectedValue(new Error('Token refresh failed'));
 
-      await expect(controller.refreshTokens(mockRequest, mockResponse)).rejects.toThrow('Token refresh failed');
+      await expect(
+        controller.refreshTokens(mockRequest, mockResponse),
+      ).rejects.toThrow('Token refresh failed');
     });
   });
 
@@ -275,13 +295,21 @@ describe('AuthController', () => {
         clearCookie: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'logout').mockResolvedValue({ message: 'Logout successful' });
+      jest
+        .spyOn(authService, 'logout')
+        .mockResolvedValue({ message: 'Logout successful' });
 
       await controller.logout(mockRequest, mockResponse);
 
       expect(authService.logout).toHaveBeenCalledWith('validToken');
-      expect(mockResponse.clearCookie).toHaveBeenCalledWith('accessToken', expect.any(Object));
-      expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', expect.any(Object));
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
+        'accessToken',
+        expect.any(Object),
+      );
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
+        'refreshToken',
+        expect.any(Object),
+      );
       expect(response.send).toHaveBeenCalledWith({
         res: mockResponse,
         statusCode: 200,
@@ -300,9 +328,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'logout').mockRejectedValue(new Error('Logout failed'));
+      jest
+        .spyOn(authService, 'logout')
+        .mockRejectedValue(new Error('Logout failed'));
 
-      await expect(controller.logout(mockRequest, mockResponse)).rejects.toThrow('Logout failed');
+      await expect(
+        controller.logout(mockRequest, mockResponse),
+      ).rejects.toThrow('Logout failed');
     });
   });
 
@@ -322,9 +354,16 @@ describe('AuthController', () => {
 
       jest.spyOn(authService, 'changePassword').mockResolvedValue(null);
 
-      await controller.changePassword(mockRequest, changePasswordDto, mockResponse);
+      await controller.changePassword(
+        mockRequest,
+        changePasswordDto,
+        mockResponse,
+      );
 
-      expect(authService.changePassword).toHaveBeenCalledWith('1', changePasswordDto);
+      expect(authService.changePassword).toHaveBeenCalledWith(
+        '1',
+        changePasswordDto,
+      );
       expect(response.send).toHaveBeenCalledWith({
         res: mockResponse,
         statusCode: 200,
@@ -345,9 +384,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'changePassword').mockRejectedValue(new Error('Password change failed'));
+      jest
+        .spyOn(authService, 'changePassword')
+        .mockRejectedValue(new Error('Password change failed'));
 
-      await expect(controller.changePassword(mockRequest, changePasswordDto, mockResponse)).rejects.toThrow('Password change failed');
+      await expect(
+        controller.changePassword(mockRequest, changePasswordDto, mockResponse),
+      ).rejects.toThrow('Password change failed');
     });
   });
 
@@ -365,7 +408,9 @@ describe('AuthController', () => {
 
       await controller.forgotPassword(forgotPasswordDto, mockResponse);
 
-      expect(authService.forgotPassword).toHaveBeenCalledWith(forgotPasswordDto.email);
+      expect(authService.forgotPassword).toHaveBeenCalledWith(
+        forgotPasswordDto.email,
+      );
       expect(response.send).toHaveBeenCalledWith({
         res: mockResponse,
         statusCode: 200,
@@ -382,9 +427,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'forgotPassword').mockRejectedValue(new Error('Password reset request failed'));
+      jest
+        .spyOn(authService, 'forgotPassword')
+        .mockRejectedValue(new Error('Password reset request failed'));
 
-      await expect(controller.forgotPassword(forgotPasswordDto, mockResponse)).rejects.toThrow('Password reset request failed');
+      await expect(
+        controller.forgotPassword(forgotPasswordDto, mockResponse),
+      ).rejects.toThrow('Password reset request failed');
     });
   });
 
@@ -403,7 +452,10 @@ describe('AuthController', () => {
 
       await controller.resetPassword(resetPasswordDto, token, mockResponse);
 
-      expect(authService.resetPassword).toHaveBeenCalledWith(token, resetPasswordDto.newPassword);
+      expect(authService.resetPassword).toHaveBeenCalledWith(
+        token,
+        resetPasswordDto.newPassword,
+      );
       expect(response.send).toHaveBeenCalledWith({
         res: mockResponse,
         statusCode: 200,
@@ -421,9 +473,13 @@ describe('AuthController', () => {
         json: jest.fn(),
       } as any as Response;
 
-      jest.spyOn(authService, 'resetPassword').mockRejectedValue(new Error('Password reset failed'));
+      jest
+        .spyOn(authService, 'resetPassword')
+        .mockRejectedValue(new Error('Password reset failed'));
 
-      await expect(controller.resetPassword(resetPasswordDto, token, mockResponse)).rejects.toThrow('Password reset failed');
+      await expect(
+        controller.resetPassword(resetPasswordDto, token, mockResponse),
+      ).rejects.toThrow('Password reset failed');
     });
   });
 });

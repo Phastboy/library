@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProfileService } from './profile.service';
 import { UsersService } from '../users/users.service';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 
 describe('ProfileService', () => {
@@ -73,7 +76,9 @@ describe('ProfileService', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(usersService.find).toHaveBeenCalledWith(ProfileService, { id: userId });
+      expect(usersService.find).toHaveBeenCalledWith(ProfileService, {
+        id: userId,
+      });
     });
 
     it('should throw an error if user is not found', async () => {

@@ -6,7 +6,11 @@ import { MailService } from '../mail/mail.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { LoginDto } from '../dto/auth/login.dto';
 import { ChangePasswordDto } from '../dto/auth/password.dto';
-import { BadRequestException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { Role } from '@prisma/client';
 
@@ -94,9 +98,13 @@ describe('AuthService', () => {
         role: Role.user,
       };
 
-      jest.spyOn(usersService, 'create').mockRejectedValue(new Error('User creation failed'));
+      jest
+        .spyOn(usersService, 'create')
+        .mockRejectedValue(new Error('User creation failed'));
 
-      await expect(service.create(createUserDto)).rejects.toThrow('User creation failed');
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        'User creation failed',
+      );
     });
   });
 
@@ -133,8 +141,13 @@ describe('AuthService', () => {
         accessToken: 'accessToken',
         refreshToken: 'refreshToken',
       });
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, { email: loginDto.email });
-      expect(argon2.verify).toHaveBeenCalledWith(user.password, loginDto.password);
+      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+        email: loginDto.email,
+      });
+      expect(argon2.verify).toHaveBeenCalledWith(
+        user.password,
+        loginDto.password,
+      );
       expect(tokenService.authTokens).toHaveBeenCalledWith(user.id);
     });
 
@@ -146,7 +159,9 @@ describe('AuthService', () => {
 
       jest.spyOn(usersService, 'find').mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(new BadRequestException('Invalid email'));
+      await expect(service.login(loginDto)).rejects.toThrow(
+        new BadRequestException('Invalid email'),
+      );
     });
 
     it('should throw an error if password is invalid', async () => {
@@ -171,7 +186,9 @@ describe('AuthService', () => {
       jest.spyOn(usersService, 'find').mockResolvedValue(user);
       jest.spyOn(argon2, 'verify').mockResolvedValue(false);
 
-      await expect(service.login(loginDto)).rejects.toThrow(new BadRequestException('Invalid password'));
+      await expect(service.login(loginDto)).rejects.toThrow(
+        new BadRequestException('Invalid password'),
+      );
     });
   });
 
@@ -196,9 +213,13 @@ describe('AuthService', () => {
     it('should throw an error if email verification fails', async () => {
       const token = 'token';
 
-      jest.spyOn(usersService, 'verifyEmail').mockRejectedValue(new Error('Email verification failed'));
+      jest
+        .spyOn(usersService, 'verifyEmail')
+        .mockRejectedValue(new Error('Email verification failed'));
 
-      await expect(service.verifyEmail(token)).rejects.toThrow('Email verification failed');
+      await expect(service.verifyEmail(token)).rejects.toThrow(
+        'Email verification failed',
+      );
     });
   });
 
@@ -219,15 +240,21 @@ describe('AuthService', () => {
       expect(result).toEqual(tokens);
       expect(tokenService.authTokens).toHaveBeenCalledWith(userId);
       expect(argon2.hash).toHaveBeenCalledWith(tokens.refreshToken);
-      expect(usersService.update).toHaveBeenCalledWith(userId, { refreshToken: 'hashedRefreshToken' });
+      expect(usersService.update).toHaveBeenCalledWith(userId, {
+        refreshToken: 'hashedRefreshToken',
+      });
     });
 
     it('should throw an error if token refresh fails', async () => {
       const userId = '1';
 
-      jest.spyOn(tokenService, 'authTokens').mockRejectedValue(new Error('Token refresh failed'));
+      jest
+        .spyOn(tokenService, 'authTokens')
+        .mockRejectedValue(new Error('Token refresh failed'));
 
-      await expect(service.refreshTokens(userId)).rejects.toThrow('Token refresh failed');
+      await expect(service.refreshTokens(userId)).rejects.toThrow(
+        'Token refresh failed',
+      );
     });
   });
 
@@ -255,8 +282,12 @@ describe('AuthService', () => {
 
       expect(result).toEqual({ message: 'Logout successful' });
       expect(tokenService.verify).toHaveBeenCalledWith(accessToken);
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, { id: user.id });
-      expect(usersService.update).toHaveBeenCalledWith(user.id, { refreshToken: null });
+      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+        id: user.id,
+      });
+      expect(usersService.update).toHaveBeenCalledWith(user.id, {
+        refreshToken: null,
+      });
     });
 
     it('should throw an error if user is invalid', async () => {
@@ -265,7 +296,9 @@ describe('AuthService', () => {
       jest.spyOn(tokenService, 'verify').mockResolvedValue('1');
       jest.spyOn(usersService, 'find').mockResolvedValue(null);
 
-      await expect(service.logout(accessToken)).rejects.toThrow(new BadRequestException('Invalid user'));
+      await expect(service.logout(accessToken)).rejects.toThrow(
+        new BadRequestException('Invalid user'),
+      );
     });
   });
 
@@ -305,7 +338,9 @@ describe('AuthService', () => {
 
       jest.spyOn(usersService, 'find').mockResolvedValue(null);
 
-      await expect(service.forgotPassword(email)).rejects.toThrow(new BadRequestException('User not found'));
+      await expect(service.forgotPassword(email)).rejects.toThrow(
+        new BadRequestException('User not found'),
+      );
     });
   });
 
@@ -330,17 +365,30 @@ describe('AuthService', () => {
       };
 
       jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(argon2, 'verify').mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+      jest
+        .spyOn(argon2, 'verify')
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
       jest.spyOn(argon2, 'hash').mockResolvedValue('hashedNewPassword');
       jest.spyOn(usersService, 'update').mockResolvedValue(null);
 
       await service.changePassword(userId, changePasswordDto);
 
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, { id: userId });
-      expect(argon2.verify).toHaveBeenCalledWith(user.password, changePasswordDto.currentPassword);
-      expect(argon2.verify).toHaveBeenCalledWith(user.password, changePasswordDto.newPassword);
+      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+        id: userId,
+      });
+      expect(argon2.verify).toHaveBeenCalledWith(
+        user.password,
+        changePasswordDto.currentPassword,
+      );
+      expect(argon2.verify).toHaveBeenCalledWith(
+        user.password,
+        changePasswordDto.newPassword,
+      );
       expect(argon2.hash).toHaveBeenCalledWith(changePasswordDto.newPassword);
-      expect(usersService.update).toHaveBeenCalledWith(userId, { password: 'hashedNewPassword' });
+      expect(usersService.update).toHaveBeenCalledWith(userId, {
+        password: 'hashedNewPassword',
+      });
     });
 
     it('should throw an error if current password is incorrect', async () => {
@@ -365,7 +413,9 @@ describe('AuthService', () => {
       jest.spyOn(usersService, 'find').mockResolvedValue(user);
       jest.spyOn(argon2, 'verify').mockResolvedValue(false);
 
-      await expect(service.changePassword(userId, changePasswordDto)).rejects.toThrow(
+      await expect(
+        service.changePassword(userId, changePasswordDto),
+      ).rejects.toThrow(
         new BadRequestException('Current password is incorrect'),
       );
     });
@@ -392,8 +442,12 @@ describe('AuthService', () => {
       jest.spyOn(usersService, 'find').mockResolvedValue(user);
       jest.spyOn(argon2, 'verify').mockResolvedValue(true);
 
-      await expect(service.changePassword(userId, changePasswordDto)).rejects.toThrow(
-        new BadRequestException('New password cannot be the same as the current password'),
+      await expect(
+        service.changePassword(userId, changePasswordDto),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'New password cannot be the same as the current password',
+        ),
       );
     });
   });
@@ -424,9 +478,13 @@ describe('AuthService', () => {
       await service.resetPassword(token, newPassword);
 
       expect(tokenService.verify).toHaveBeenCalledWith(token);
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, { id: userId });
+      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+        id: userId,
+      });
       expect(argon2.hash).toHaveBeenCalledWith(newPassword);
-      expect(usersService.update).toHaveBeenCalledWith(userId, { password: 'hashedNewPassword' });
+      expect(usersService.update).toHaveBeenCalledWith(userId, {
+        password: 'hashedNewPassword',
+      });
     });
 
     it('should throw an error if user is not found', async () => {

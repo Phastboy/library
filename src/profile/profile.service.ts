@@ -9,20 +9,18 @@ export class ProfileService {
 
   async read(userId: string): Promise<Profile> {
     Logger.log('Received request to get profile', ProfileService.name);
-      const user =
-        await this.userService.find(ProfileService, { id: userId });
-      if (!user) {
-        Logger.error('User not found', ProfileService.name);
-        throw new BadRequestException('User not found');
-      }
-      return this.userService.stripSensitiveFields(user);
+    const user = await this.userService.find(ProfileService, { id: userId });
+    if (!user) {
+      Logger.error('User not found', ProfileService.name);
+      throw new BadRequestException('User not found');
+    }
+    return this.userService.stripSensitiveFields(user);
   }
 
   async update(userId: string, updateUserDto: UpdateUserDto): Promise<Profile> {
     Logger.log('Received request to update profile', ProfileService.name);
     try {
-      const user =
-        await this.userService.update(userId, updateUserDto);
+      const user = await this.userService.update(userId, updateUserDto);
       return user;
     } catch (error: any) {
       Logger.error(error.message, error.stack, ProfileService.name);
