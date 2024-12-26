@@ -122,10 +122,7 @@ export class UsersService {
           return { details, accessToken, refreshToken };
         } catch (error) {
           Logger.error(error.message, error.stack, UsersService.name);
-          throw new InternalServerErrorException(
-            'Error creating user',
-            error.message,
-          );
+          throw new InternalServerErrorException(error.message);
         }
       },
       { timeout: 10000 },

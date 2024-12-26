@@ -21,8 +21,8 @@ export class MailService {
       });
       this.logger.log(`Email sent successfully: ${info.messageId}`);
     } catch (error) {
-      this.logger.error('Error sending email', error.stack);
-      throw new InternalServerErrorException('Failed to send email');
+      this.logger.error('Error sending email', error.message, error.stack);
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
