@@ -3,6 +3,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import * as os from 'os';
 
 const port = process.env.PORT || 3001;
 
@@ -28,6 +29,19 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  Logger.log(`app is listening at ${port}`, 'app');
+
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const iface of Object.values(interfaces)) {
+    for (const alias of iface) {
+      if (alias.family === 'IPv4' && !alias.internal) {
+        addresses.push(alias.address);
+      }
+    }
+  }
+
+  addresses.forEach((address) => {
+    Logger.log(`app is listening at http://${address}:${port}`, 'app');
+  });
 }
 bootstrap();
