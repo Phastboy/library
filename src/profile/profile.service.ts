@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
-import { UpdateUserDto } from 'src/dto/user/update-user.dto';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
+import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { Profile } from 'src/types';
 
 @Injectable()
@@ -9,22 +9,21 @@ export class ProfileService {
 
   async read(userId: string): Promise<Profile> {
     Logger.log('Received request to get profile', ProfileService.name);
-    try {
-      const { id, refreshToken, password, ...profile } =
+      const user =
         await this.userService.find(ProfileService, { id: userId });
-      return profile;
-    } catch (error: any) {
-      Logger.error(error.message, error.stack, ProfileService.name);
-      throw error;
-    }
+      if (!user) {
+        Logger.error('User not found', ProfileService.name);
+        throw new BadRequestException('User not found');
+      }
+      return this.userService.stripSensitiveFields(user);
   }
 
   async update(userId: string, updateUserDto: UpdateUserDto): Promise<Profile> {
     Logger.log('Received request to update profile', ProfileService.name);
     try {
-      const { id, refreshToken, password, ...profile } =
-        await this.userService.find(ProfileService, { id: userId });
-      return profile;
+      const user =
+        await this.userService.update(userId, updateUserDto);
+      return user;
     } catch (error: any) {
       Logger.error(error.message, error.stack, ProfileService.name);
       throw error;

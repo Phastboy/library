@@ -167,13 +167,13 @@ export class UsersService {
     Logger.log(`Updating user with id ${userId}`, UsersService.name);
     try {
       Logger.log('Updating user...', UsersService.name);
-      const { id, password, refreshToken, ...update } =
+      const updated =
         await this.prisma.user.update({
           where: { id: userId },
           data,
         });
-      Logger.log(`User updated: ${update}`, UsersService.name);
-      return update;
+      Logger.log(`User updated: ${updated}`, UsersService.name);
+      return this.stripSensitiveFields(updated);
     } catch (error) {
       Logger.error(error.message, error.stack, UsersService.name);
       throw new InternalServerErrorException('Error updating user');
@@ -202,7 +202,7 @@ export class UsersService {
     return userId;
   }
 
-  private stripSensitiveFields(user: any) {
+  stripSensitiveFields(user: any) {
     const { password, refreshToken, ...rest } = user;
     return rest;
   }

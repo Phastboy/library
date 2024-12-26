@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../dto/user/create-user.dto';
-import { LoginDto } from 'src/dto/auth/login.dto';
-import { TokenService } from 'src/token/token.service';
+import { LoginDto } from '../dto/auth/login.dto';
+import { TokenService } from '../token/token.service';
 import {
   ApiCookieAuth,
   ApiQuery,
@@ -26,13 +26,13 @@ import {
 import { AuthGuard } from './auth.guard';
 import { RefreshGuard } from './refresh.guard';
 import { Response } from 'express';
-import { response } from 'src/utils/response.util';
+import { response } from '../utils/response.util';
 import {
   ChangePasswordDto,
   ForgotPasswordDto,
   ResetPasswordDto,
-} from 'src/dto/auth/password.dto';
-import { setAuthCookies } from 'src/utils/cookie.util';
+} from '../dto/auth/password.dto';
+import { setAuthCookies } from '../utils/cookie.util';
 
 @ApiTags('authentication')
 @Controller('')

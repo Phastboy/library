@@ -6,14 +6,14 @@ import {
   Logger,
 } from '@nestjs/common';
 import { CreateUserDto } from '../dto/user/create-user.dto';
-import { UsersService } from 'src/users/users.service';
-import { Tokens } from 'src/types';
-import { LoginDto } from 'src/dto/auth/login.dto';
+import { UsersService } from '../users/users.service';
+import { Tokens } from '../types';
+import { LoginDto } from '../dto/auth/login.dto';
 import * as argon2 from 'argon2';
-import { TokenService } from 'src/token/token.service';
-import { ChangePasswordDto } from 'src/dto/auth/password.dto';
-import { MailService } from 'src/mail/mail.service';
-import { generateLink } from 'src/utils/link.util';
+import { TokenService } from '../token/token.service';
+import { ChangePasswordDto } from '../dto/auth/password.dto';
+import { MailService } from '../mail/mail.service';
+import { generateLink } from '../utils/link.util';
 
 @Injectable()
 export class AuthService {

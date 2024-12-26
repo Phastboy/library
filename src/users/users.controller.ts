@@ -15,15 +15,15 @@ import {
   ApiParam,
   ApiCookieAuth,
 } from '@nestjs/swagger';
-import { Roles } from 'src/decorators/roles.decorator';
-import { RoleGuard } from 'src/auth/role.guard';
-import { Role } from 'src/types';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { response } from 'src/utils/response.util';
+import { Roles } from '../decorators/roles.decorator';
+import { RoleGuard } from '../auth/role.guard';
+import { Role } from '../types';
+import { AuthGuard } from '../auth/auth.guard';
+import { response } from '../utils/response.util';
 
 @ApiCookieAuth('accessToken')
 @ApiTags('users')
-@Roles(Role.ADMIN)
+@Roles(Role.admin)
 @UseGuards(AuthGuard, RoleGuard)
 @Controller('users')
 export class UsersController {

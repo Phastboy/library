@@ -6,10 +6,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from 'src/decorators/roles.decorator';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { AuthenticatedRequest } from 'src/types';
-import { UsersService } from 'src/users/users.service';
+import { AuthenticatedRequest } from '../types';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
