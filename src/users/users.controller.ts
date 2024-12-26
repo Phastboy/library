@@ -17,7 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { RoleGuard } from '../auth/role.guard';
-import { Role } from '../types';
+import { Role } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
 import { response } from '../utils/response.util';
 

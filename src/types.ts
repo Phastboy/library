@@ -1,10 +1,5 @@
-import { $Enums } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { Request } from 'express';
-
-export enum Role {
-  admin = 'admin',
-  user = 'user',
-}
 
 export interface Tokens {
   accessToken: string;
@@ -39,7 +34,7 @@ export interface Profile {
   id: string;
   email: string;
   username: string;
-  role: $Enums.Role;
+  role: Role;
   phoneNumber: string | null;
   emailIsVerified: boolean;
   createdAt: Date;

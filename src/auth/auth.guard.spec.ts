@@ -32,13 +32,18 @@ describe('AuthGuard', () => {
         }),
       } as ExecutionContext;
 
-      jest.spyOn(tokenService, 'extractTokenFromCookie').mockReturnValue('validToken');
+      jest
+        .spyOn(tokenService, 'extractTokenFromCookie')
+        .mockReturnValue('validToken');
       jest.spyOn(tokenService, 'verify').mockResolvedValue('userId');
 
       const result = await authGuard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(tokenService.extractTokenFromCookie).toHaveBeenCalledWith('accessToken=validToken', 'accessToken');
+      expect(tokenService.extractTokenFromCookie).toHaveBeenCalledWith(
+        'accessToken=validToken',
+        'accessToken',
+      );
       expect(tokenService.verify).toHaveBeenCalledWith('validToken');
       expect(mockRequest.userId).toBe('userId');
     });
@@ -74,8 +79,12 @@ describe('AuthGuard', () => {
         }),
       } as ExecutionContext;
 
-      jest.spyOn(tokenService, 'extractTokenFromCookie').mockReturnValue('invalidToken');
-      jest.spyOn(tokenService, 'verify').mockRejectedValue(new Error('Invalid token'));
+      jest
+        .spyOn(tokenService, 'extractTokenFromCookie')
+        .mockReturnValue('invalidToken');
+      jest
+        .spyOn(tokenService, 'verify')
+        .mockRejectedValue(new Error('Invalid token'));
 
       await expect(authGuard.canActivate(mockContext)).rejects.toThrow(
         new UnauthorizedException('Invalid token'),

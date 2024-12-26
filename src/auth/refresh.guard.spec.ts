@@ -37,14 +37,23 @@ describe('RefreshGuard', () => {
         }),
       } as ExecutionContext;
 
-      jest.spyOn(tokenService, 'extractTokenFromCookie').mockReturnValue('validToken');
-      jest.spyOn(usersService, 'validateRefreshToken').mockResolvedValue('userId');
+      jest
+        .spyOn(tokenService, 'extractTokenFromCookie')
+        .mockReturnValue('validToken');
+      jest
+        .spyOn(usersService, 'validateRefreshToken')
+        .mockResolvedValue('userId');
 
       const result = await refreshGuard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(tokenService.extractTokenFromCookie).toHaveBeenCalledWith('refreshToken=validToken', 'refreshToken');
-      expect(usersService.validateRefreshToken).toHaveBeenCalledWith('validToken');
+      expect(tokenService.extractTokenFromCookie).toHaveBeenCalledWith(
+        'refreshToken=validToken',
+        'refreshToken',
+      );
+      expect(usersService.validateRefreshToken).toHaveBeenCalledWith(
+        'validToken',
+      );
       expect(mockRequest.userId).toBe('userId');
     });
 
@@ -79,8 +88,12 @@ describe('RefreshGuard', () => {
         }),
       } as ExecutionContext;
 
-      jest.spyOn(tokenService, 'extractTokenFromCookie').mockReturnValue('invalidToken');
-      jest.spyOn(usersService, 'validateRefreshToken').mockRejectedValue(new Error('Invalid token'));
+      jest
+        .spyOn(tokenService, 'extractTokenFromCookie')
+        .mockReturnValue('invalidToken');
+      jest
+        .spyOn(usersService, 'validateRefreshToken')
+        .mockRejectedValue(new Error('Invalid token'));
 
       await expect(refreshGuard.canActivate(mockContext)).rejects.toThrow(
         new UnauthorizedException('Invalid token'),

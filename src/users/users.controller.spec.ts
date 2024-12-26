@@ -58,11 +58,15 @@ describe('UsersController', () => {
     });
 
     it('should handle errors', async () => {
-      jest.spyOn(usersService, 'findAll').mockRejectedValue(new Error('Database error'));
+      jest
+        .spyOn(usersService, 'findAll')
+        .mockRejectedValue(new Error('Database error'));
 
       const mockResponse = { send: jest.fn() };
 
-      await expect(controller.findAll(mockResponse)).rejects.toThrow('Database error');
+      await expect(controller.findAll(mockResponse)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
@@ -79,13 +83,15 @@ describe('UsersController', () => {
         refreshToken: 'refreshToken',
         createdAt: new Date(),
         updatedAt: new Date(),
-    };
+      };
       jest.spyOn(usersService, 'find').mockResolvedValue(user);
 
       const mockResponse = { send: jest.fn() };
       await controller.findOne('1', mockResponse);
 
-      expect(usersService.find).toHaveBeenCalledWith(UsersController, { id: '1' });
+      expect(usersService.find).toHaveBeenCalledWith(UsersController, {
+        id: '1',
+      });
       expect(response.send).toHaveBeenCalledWith({
         res: mockResponse,
         statusCode: 200,
@@ -99,32 +105,38 @@ describe('UsersController', () => {
 
       const mockResponse = { send: jest.fn() };
 
-      await expect(controller.findOne('1', mockResponse)).rejects.toThrow('User not found');
+      await expect(controller.findOne('1', mockResponse)).rejects.toThrow(
+        'User not found',
+      );
     });
 
     it('should handle errors', async () => {
-      jest.spyOn(usersService, 'find').mockRejectedValue(new Error('Database error'));
+      jest
+        .spyOn(usersService, 'find')
+        .mockRejectedValue(new Error('Database error'));
 
       const mockResponse = { send: jest.fn() };
 
-      await expect(controller.findOne('1', mockResponse)).rejects.toThrow('Database error');
+      await expect(controller.findOne('1', mockResponse)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
   describe('deleteUser', () => {
     it('should delete a user by ID', async () => {
-        const user = {
-            id: '1',
-            username: 'testuser',
-            email: 'user@test.com',
-            role: Role.user,
-            password: 'hashedPassword',
-            phoneNumber: '1234567890',
-            emailIsVerified: true,
-            refreshToken: 'refreshToken',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
+      const user = {
+        id: '1',
+        username: 'testuser',
+        email: 'user@test.com',
+        role: Role.user,
+        password: 'hashedPassword',
+        phoneNumber: '1234567890',
+        emailIsVerified: true,
+        refreshToken: 'refreshToken',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       jest.spyOn(usersService, 'delete').mockResolvedValue(user);
 
       const mockResponse = { send: jest.fn() };
@@ -139,11 +151,15 @@ describe('UsersController', () => {
     });
 
     it('should handle errors', async () => {
-      jest.spyOn(usersService, 'delete').mockRejectedValue(new Error('Database error'));
+      jest
+        .spyOn(usersService, 'delete')
+        .mockRejectedValue(new Error('Database error'));
 
       const mockResponse = { send: jest.fn() };
 
-      await expect(controller.deleteUser('1', mockResponse)).rejects.toThrow('Database error');
+      await expect(controller.deleteUser('1', mockResponse)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 });

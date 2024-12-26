@@ -71,7 +71,7 @@ describe('RoleGuard', () => {
         refreshToken: 'refresh-token',
         createdAt: new Date(),
         updatedAt: new Date(),
-      }
+      };
 
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.admin]);
       jest.spyOn(usersService, 'find').mockResolvedValue(user);
@@ -109,7 +109,7 @@ describe('RoleGuard', () => {
         refreshToken: 'refresh-token',
         createdAt: new Date(),
         updatedAt: new Date(),
-      }
+      };
 
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.admin]);
       jest.spyOn(usersService, 'find').mockResolvedValue(user);

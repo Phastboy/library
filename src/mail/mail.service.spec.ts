@@ -52,7 +52,9 @@ describe('MailService', () => {
       const subject = 'Test Subject';
       const content = '<p>Test Content</p>';
 
-      jest.spyOn(mailerService, 'sendMail').mockRejectedValue(new Error('Failed to send email'));
+      jest
+        .spyOn(mailerService, 'sendMail')
+        .mockRejectedValue(new Error('Failed to send email'));
 
       await expect(service.sendEmail(to, subject, content)).rejects.toThrow(
         new InternalServerErrorException('Failed to send email'),

@@ -14,9 +14,16 @@ import {
 import { AddressesService } from './addresses.service';
 import { CreateAddressDto } from '../../dto/address/create-address.dto';
 import { UpdateAddressDto } from '../../dto/address/update-address.dto';
-import { ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiParam,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 
+@ApiCookieAuth('accessToken')
 @UseGuards(AuthGuard)
 @ApiTags('addresses')
 @Controller('addresses')

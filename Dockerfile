@@ -5,9 +5,9 @@ ENV NODE_ENV=production
 
 # Install OpenSSL (libressl) and required dependencies
 RUN apk update && apk add --no-cache \
-    openssl \
-    libressl \
-    && rm -rf /var/cache/apk/*
+  openssl \
+  libressl \
+  && rm -rf /var/cache/apk/*
 
 # Set working directory
 WORKDIR /usr/src/app
@@ -25,4 +25,4 @@ RUN npm run build
 
 # Expose port and start application
 EXPOSE 8080
-CMD [ "npm", "run", "start:prod" ]
+CMD ["npm", "run", "start:prod"]
