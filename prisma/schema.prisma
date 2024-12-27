@@ -45,13 +45,14 @@ enum Role {
 }
 
 model Book {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  title      String
-  author     String
-  genre      String
-  ISBN       String?   @unique
-  totalCopies Int      @default(1)
-  availableCopies Int  @default(1)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  description       String?
+  author            String
+  genre             String
+  ISBN              String?   @unique
+  totalCopies       Int      @default(1)
+  availableCopies   Int  @default(1)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
