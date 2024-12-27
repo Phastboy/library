@@ -50,9 +50,9 @@ model Book {
   description       String?
   author            String
   genre             String
-  ISBN              String?   @unique
-  totalCopies       Int      @default(1)
-  availableCopies   Int  @default(1)
+  ISBN              String   @unique
+  totalCopies       Int
+  availableCopies   Int
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
