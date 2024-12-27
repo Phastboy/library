@@ -11,8 +11,7 @@ export class BooksService {
     return this.prisma.book.create({
       data: {
         ...data,
-        totalCopies: data.totalCopies ?? 1,
-        availableCopies: data.totalCopies ?? 1,
+        availableCopies: data.totalCopies,
       },
     });
   }
