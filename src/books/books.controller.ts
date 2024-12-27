@@ -16,8 +16,8 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
-  create(@Body() createBookDto: CreateBookDto) {
-    return this.booksService.create(createBookDto);
+  async add(@Body() createBookDto: CreateBookDto) {
+    return await this.booksService.add(createBookDto);
   }
 
   @Get()
