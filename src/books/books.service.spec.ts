@@ -34,6 +34,7 @@ describe('BooksService', () => {
       const createBookDto: CreateBookDto = {
         title: 'Test Book',
         author: 'Test Author',
+	description: 'the description of the book',
         genre: 'Fiction',
         ISBN: '230-11111',
         totalCopies: 5,

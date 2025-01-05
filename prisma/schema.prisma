@@ -47,7 +47,7 @@ enum Role {
 model Book {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   title             String
-  description       String?
+  description       String
   author            String
   genre             String
   ISBN              String   @unique

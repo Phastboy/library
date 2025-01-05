@@ -16,8 +16,7 @@ export class CreateBookDto {
     example: 'A novel about the American dream and societal excess.',
   })
   @IsString()
-  @IsOptional()
-  description?: string;
+  description: string;
 
   @ApiProperty({
     description: 'The author of the book',
