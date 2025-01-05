@@ -40,8 +40,10 @@ async function bootstrap() {
     }
   }
 
+  const protocol = app.getHttpAdapter().getInstance().server?.proto || 'http';
+
   addresses.forEach((address) => {
-    Logger.log(`app is listening at http://${address}:${port}`, 'app');
+    Logger.log(`app is listening at ${protocol}://${address}:${port}`, 'app');
   });
 }
 bootstrap();
