@@ -31,7 +31,6 @@ describe('BooksService', () => {
 
   describe('add', () => {
     it('should create a book with the given data', async () => {
-      
       const createBookDto: CreateBookDto = {
         title: 'Test Book',
         author: 'Test Author',
@@ -62,4 +61,3 @@ describe('BooksService', () => {
     });
   });
 });
-  
