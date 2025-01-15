@@ -10,18 +10,18 @@ import { MailModule } from './mail/mail.module';
 import { BooksModule } from './books/books.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    AuthModule,
-    PrismaModule,
-    UsersModule,
-    ProfileModule,
-    MailModule,
-    BooksModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        AuthModule,
+        PrismaModule,
+        UsersModule,
+        ProfileModule,
+        MailModule,
+        BooksModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}

@@ -3,24 +3,24 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 describe('AppController', () => {
-  let appController: AppController;
+    let appController: AppController;
 
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
-    }).compile();
+    beforeEach(async () => {
+        const app: TestingModule = await Test.createTestingModule({
+            controllers: [AppController],
+            providers: [AppService],
+        }).compile();
 
-    appController = app.get<AppController>(AppController);
-  });
-
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toEqual({
-        title: 'Library',
-        description:
-          'A library management system where users can browse and borrow books, manage their accounts, and interact with library staff. The platform aims to provide a seamless experience for both library patrons and administrators.',
-      });
+        appController = app.get<AppController>(AppController);
     });
-  });
+
+    describe('root', () => {
+        it('should return "Hello World!"', () => {
+            expect(appController.getHello()).toEqual({
+                title: 'Library',
+                description:
+                    'A library management system where users can browse and borrow books, manage their accounts, and interact with library staff. The platform aims to provide a seamless experience for both library patrons and administrators.',
+            });
+        });
+    });
 });

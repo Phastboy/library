@@ -9,15 +9,15 @@ import { MailModule } from 'src/mail/mail.module';
 import { MailService } from 'src/mail/mail.service';
 
 @Module({
-  imports: [
-    UsersModule,
-    JwtModule.register({
-      global: true,
-    }),
-    TokenModule,
-    MailModule,
-  ],
-  controllers: [AuthController],
-  providers: [AuthService, TokenService, MailService],
+    imports: [
+        UsersModule,
+        JwtModule.register({
+            global: true,
+        }),
+        TokenModule,
+        MailModule,
+    ],
+    controllers: [AuthController],
+    providers: [AuthService, TokenService, MailService],
 })
 export class AuthModule {}

@@ -7,8 +7,8 @@ import { TokenModule } from 'src/token/token.module';
 import { TokenService } from 'src/token/token.service';
 
 @Module({
-  imports: [PrismaModule, TokenModule],
-  controllers: [AddressesController],
-  providers: [AddressesService, PrismaService, TokenService],
+    imports: [PrismaModule, TokenModule],
+    controllers: [AddressesController],
+    providers: [AddressesService, PrismaService, TokenService],
 })
 export class AddressesModule {}

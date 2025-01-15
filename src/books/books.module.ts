@@ -4,8 +4,8 @@ import { BooksController } from './books.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [BooksController],
-  providers: [BooksService],
+    imports: [PrismaModule],
+    controllers: [BooksController],
+    providers: [BooksService],
 })
 export class BooksModule {}

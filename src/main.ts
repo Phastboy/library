@@ -8,42 +8,45 @@ import * as os from 'os';
 const port = process.env.PORT || 3001;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new HttpExceptionFilter()); // Register the global exception filter
+    const app = await NestFactory.create(AppModule);
+    app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalFilters(new HttpExceptionFilter()); // Register the global exception filter
 
-  const config = new DocumentBuilder()
-    .setTitle('Library API')
-    .setDescription('Documentation for the Library API')
-    .setVersion('0.0.1')
-    .addTag('library')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/docs', app, document, {
-    swaggerOptions: {
-      requestInterceptor: (req: any) => {
-        req.credentials = 'include';
-        return req;
-      },
-    },
-  });
+    const config = new DocumentBuilder()
+        .setTitle('Library API')
+        .setDescription('Documentation for the Library API')
+        .setVersion('0.0.1')
+        .addTag('library')
+        .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('/docs', app, document, {
+        swaggerOptions: {
+            requestInterceptor: (req: any) => {
+                req.credentials = 'include';
+                return req;
+            },
+        },
+    });
 
-  await app.listen(port);
+    await app.listen(port);
 
-  const interfaces = os.networkInterfaces();
-  const addresses = [];
-  for (const iface of Object.values(interfaces)) {
-    for (const alias of iface) {
-      if (alias.family === 'IPv4' && !alias.internal) {
-        addresses.push(alias.address);
-      }
+    const interfaces = os.networkInterfaces();
+    const addresses = [];
+    for (const iface of Object.values(interfaces)) {
+        for (const alias of iface) {
+            if (alias.family === 'IPv4' && !alias.internal) {
+                addresses.push(alias.address);
+            }
+        }
     }
-  }
 
-  const protocol = app.getHttpAdapter().getInstance().server?.proto || 'http';
+    const protocol = app.getHttpAdapter().getInstance().server?.proto || 'http';
 
-  addresses.forEach((address) => {
-    Logger.log(`app is listening at ${protocol}://${address}:${port}`, 'app');
-  });
+    addresses.forEach((address) => {
+        Logger.log(
+            `app is listening at ${protocol}://${address}:${port}`,
+            'app',
+        );
+    });
 }
 bootstrap();

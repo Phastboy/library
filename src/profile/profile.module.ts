@@ -13,15 +13,15 @@ import { MailModule } from 'src/mail/mail.module';
 import { MailService } from 'src/mail/mail.service';
 
 @Module({
-  imports: [UsersModule, PrismaModule, TokenModule, AuthModule, MailModule],
-  controllers: [ProfileController],
-  providers: [
-    ProfileService,
-    UsersService,
-    PrismaService,
-    TokenService,
-    AuthService,
-    MailService,
-  ],
+    imports: [UsersModule, PrismaModule, TokenModule, AuthModule, MailModule],
+    controllers: [ProfileController],
+    providers: [
+        ProfileService,
+        UsersService,
+        PrismaService,
+        TokenService,
+        AuthService,
+        MailService,
+    ],
 })
 export class ProfileModule {}
