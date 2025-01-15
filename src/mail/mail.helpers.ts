@@ -5,9 +5,9 @@ export const generateEmailTemplate = (content: string): string => `
 `;
 
 export const generateVerificationEmailContent = (
-  verificationLink: string,
+    verificationLink: string,
 ): string =>
-  generateEmailTemplate(`
+    generateEmailTemplate(`
   <h1>Welcome to MyLibrary!</h1>
   <p>Please click the button below to verify your email address</p>
   <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">

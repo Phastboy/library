@@ -9,9 +9,9 @@ import { MailModule } from 'src/mail/mail.module';
 import { MailService } from 'src/mail/mail.service';
 
 @Module({
-  imports: [PrismaModule, AddressesModule, TokenModule, MailModule],
-  providers: [UsersService, TokenService, MailService],
-  exports: [UsersService],
-  controllers: [UsersController],
+    imports: [PrismaModule, AddressesModule, TokenModule, MailModule],
+    providers: [UsersService, TokenService, MailService],
+    exports: [UsersService],
+    controllers: [UsersController],
 })
 export class UsersModule {}

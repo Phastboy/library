@@ -7,497 +7,502 @@ import { CreateUserDto } from '../dto/user/create-user.dto';
 import { LoginDto } from '../dto/auth/login.dto';
 import { ChangePasswordDto } from '../dto/auth/password.dto';
 import {
-  BadRequestException,
-  InternalServerErrorException,
-  UnauthorizedException,
+    BadRequestException,
+    InternalServerErrorException,
+    UnauthorizedException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { Role } from '@prisma/client';
 
 describe('AuthService', () => {
-  let service: AuthService;
-  let usersService: UsersService;
-  let tokenService: TokenService;
-  let mailService: MailService;
+    let service: AuthService;
+    let usersService: UsersService;
+    let tokenService: TokenService;
+    let mailService: MailService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        {
-          provide: UsersService,
-          useValue: {
-            create: jest.fn(),
-            find: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-            verifyEmail: jest.fn(),
-          },
-        },
-        {
-          provide: TokenService,
-          useValue: {
-            generate: jest.fn(),
-            authTokens: jest.fn(),
-            verify: jest.fn(),
-            isProduction: jest.fn().mockReturnValue(false),
-          },
-        },
-        {
-          provide: MailService,
-          useValue: {
-            sendEmail: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                AuthService,
+                {
+                    provide: UsersService,
+                    useValue: {
+                        create: jest.fn(),
+                        find: jest.fn(),
+                        update: jest.fn(),
+                        delete: jest.fn(),
+                        verifyEmail: jest.fn(),
+                    },
+                },
+                {
+                    provide: TokenService,
+                    useValue: {
+                        generate: jest.fn(),
+                        authTokens: jest.fn(),
+                        verify: jest.fn(),
+                        isProduction: jest.fn().mockReturnValue(false),
+                    },
+                },
+                {
+                    provide: MailService,
+                    useValue: {
+                        sendEmail: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    usersService = module.get<UsersService>(UsersService);
-    tokenService = module.get<TokenService>(TokenService);
-    mailService = module.get<MailService>(MailService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  describe('create', () => {
-    it('should create a user successfully', async () => {
-      const createUserDto: CreateUserDto = {
-        email: 'test@example.com',
-        password: 'password',
-        username: 'testuser',
-        role: Role.user,
-      };
-
-      const createdUser = {
-        details: {
-          id: '1',
-          email: createUserDto.email,
-          username: createUserDto.username,
-          role: createUserDto.role,
-        },
-        accessToken: 'accessToken',
-        refreshToken: 'refreshToken',
-      };
-
-      jest.spyOn(usersService, 'create').mockResolvedValue(createdUser);
-
-      const result = await service.create(createUserDto);
-
-      expect(result).toEqual(createdUser);
-      expect(usersService.create).toHaveBeenCalledWith(createUserDto);
+        service = module.get<AuthService>(AuthService);
+        usersService = module.get<UsersService>(UsersService);
+        tokenService = module.get<TokenService>(TokenService);
+        mailService = module.get<MailService>(MailService);
     });
 
-    it('should throw an error if user creation fails', async () => {
-      const createUserDto: CreateUserDto = {
-        email: 'test@example.com',
-        password: 'password',
-        username: 'testuser',
-        role: Role.user,
-      };
-
-      jest
-        .spyOn(usersService, 'create')
-        .mockRejectedValue(new Error('User creation failed'));
-
-      await expect(service.create(createUserDto)).rejects.toThrow(
-        'User creation failed',
-      );
-    });
-  });
-
-  describe('login', () => {
-    it('should login a user successfully', async () => {
-      const loginDto: LoginDto = {
-        email: 'test@example.com',
-        password: 'password',
-      };
-
-      const user = {
-        id: '1',
-        email: loginDto.email,
-        username: 'testuser',
-        password: await argon2.hash(loginDto.password),
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
-      jest.spyOn(tokenService, 'authTokens').mockResolvedValue({
-        accessToken: 'accessToken',
-        refreshToken: 'refreshToken',
-      });
-
-      const result = await service.login(loginDto);
-
-      expect(result).toEqual({
-        accessToken: 'accessToken',
-        refreshToken: 'refreshToken',
-      });
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
-        email: loginDto.email,
-      });
-      expect(argon2.verify).toHaveBeenCalledWith(
-        user.password,
-        loginDto.password,
-      );
-      expect(tokenService.authTokens).toHaveBeenCalledWith(user.id);
+    it('should be defined', () => {
+        expect(service).toBeDefined();
     });
 
-    it('should throw an error if email is invalid', async () => {
-      const loginDto: LoginDto = {
-        email: 'test@example.com',
-        password: 'password',
-      };
+    describe('create', () => {
+        it('should create a user successfully', async () => {
+            const createUserDto: CreateUserDto = {
+                email: 'test@example.com',
+                password: 'password',
+                username: 'testuser',
+                role: Role.user,
+            };
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(null);
+            const createdUser = {
+                details: {
+                    id: '1',
+                    email: createUserDto.email,
+                    username: createUserDto.username,
+                    role: createUserDto.role,
+                },
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+            };
 
-      await expect(service.login(loginDto)).rejects.toThrow(
-        new BadRequestException('Invalid email'),
-      );
+            jest.spyOn(usersService, 'create').mockResolvedValue(createdUser);
+
+            const result = await service.create(createUserDto);
+
+            expect(result).toEqual(createdUser);
+            expect(usersService.create).toHaveBeenCalledWith(createUserDto);
+        });
+
+        it('should throw an error if user creation fails', async () => {
+            const createUserDto: CreateUserDto = {
+                email: 'test@example.com',
+                password: 'password',
+                username: 'testuser',
+                role: Role.user,
+            };
+
+            jest.spyOn(usersService, 'create').mockRejectedValue(
+                new Error('User creation failed'),
+            );
+
+            await expect(service.create(createUserDto)).rejects.toThrow(
+                'User creation failed',
+            );
+        });
     });
 
-    it('should throw an error if password is invalid', async () => {
-      const loginDto: LoginDto = {
-        email: 'test@example.com',
-        password: 'password',
-      };
+    describe('login', () => {
+        it('should login a user successfully', async () => {
+            const loginDto: LoginDto = {
+                email: 'test@example.com',
+                password: 'password',
+            };
 
-      const user = {
-        id: '1',
-        email: loginDto.email,
-        username: 'testuser',
-        password: await argon2.hash('wrongpassword'),
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+            const user = {
+                id: '1',
+                email: loginDto.email,
+                username: 'testuser',
+                password: await argon2.hash(loginDto.password),
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(argon2, 'verify').mockResolvedValue(false);
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+            jest.spyOn(tokenService, 'authTokens').mockResolvedValue({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+            });
 
-      await expect(service.login(loginDto)).rejects.toThrow(
-        new BadRequestException('Invalid password'),
-      );
-    });
-  });
+            const result = await service.login(loginDto);
 
-  describe('verifyEmail', () => {
-    it('should verify email successfully', async () => {
-      const token = 'token';
-      const verifiedData = {
-        id: '1',
-        email: 'test@example.com',
-        username: 'testuser',
-        emailIsVerified: true,
-      };
+            expect(result).toEqual({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+            });
+            expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+                email: loginDto.email,
+            });
+            expect(argon2.verify).toHaveBeenCalledWith(
+                user.password,
+                loginDto.password,
+            );
+            expect(tokenService.authTokens).toHaveBeenCalledWith(user.id);
+        });
 
-      jest.spyOn(usersService, 'verifyEmail').mockResolvedValue(verifiedData);
+        it('should throw an error if email is invalid', async () => {
+            const loginDto: LoginDto = {
+                email: 'test@example.com',
+                password: 'password',
+            };
 
-      const result = await service.verifyEmail(token);
+            jest.spyOn(usersService, 'find').mockResolvedValue(null);
 
-      expect(result).toEqual(verifiedData);
-      expect(usersService.verifyEmail).toHaveBeenCalledWith(token);
-    });
+            await expect(service.login(loginDto)).rejects.toThrow(
+                new BadRequestException('Invalid email'),
+            );
+        });
 
-    it('should throw an error if email verification fails', async () => {
-      const token = 'token';
+        it('should throw an error if password is invalid', async () => {
+            const loginDto: LoginDto = {
+                email: 'test@example.com',
+                password: 'password',
+            };
 
-      jest
-        .spyOn(usersService, 'verifyEmail')
-        .mockRejectedValue(new Error('Email verification failed'));
+            const user = {
+                id: '1',
+                email: loginDto.email,
+                username: 'testuser',
+                password: await argon2.hash('wrongpassword'),
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-      await expect(service.verifyEmail(token)).rejects.toThrow(
-        'Email verification failed',
-      );
-    });
-  });
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(argon2, 'verify').mockResolvedValue(false);
 
-  describe('refreshTokens', () => {
-    it('should refresh tokens successfully', async () => {
-      const userId = '1';
-      const tokens = {
-        accessToken: 'accessToken',
-        refreshToken: 'refreshToken',
-      };
-
-      jest.spyOn(tokenService, 'authTokens').mockResolvedValue(tokens);
-      jest.spyOn(argon2, 'hash').mockResolvedValue('hashedRefreshToken');
-      jest.spyOn(usersService, 'update').mockResolvedValue(null);
-
-      const result = await service.refreshTokens(userId);
-
-      expect(result).toEqual(tokens);
-      expect(tokenService.authTokens).toHaveBeenCalledWith(userId);
-      expect(argon2.hash).toHaveBeenCalledWith(tokens.refreshToken);
-      expect(usersService.update).toHaveBeenCalledWith(userId, {
-        refreshToken: 'hashedRefreshToken',
-      });
-    });
-
-    it('should throw an error if token refresh fails', async () => {
-      const userId = '1';
-
-      jest
-        .spyOn(tokenService, 'authTokens')
-        .mockRejectedValue(new Error('Token refresh failed'));
-
-      await expect(service.refreshTokens(userId)).rejects.toThrow(
-        'Token refresh failed',
-      );
-    });
-  });
-
-  describe('logout', () => {
-    it('should logout a user successfully', async () => {
-      const accessToken = 'accessToken';
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        username: 'testuser',
-        password: 'hashedPassword',
-        role: Role.user,
-        refreshToken: 'refreshToken',
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      jest.spyOn(tokenService, 'verify').mockResolvedValue(user.id);
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(usersService, 'update').mockResolvedValue(null);
-
-      const result = await service.logout(accessToken);
-
-      expect(result).toEqual({ message: 'Logout successful' });
-      expect(tokenService.verify).toHaveBeenCalledWith(accessToken);
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
-        id: user.id,
-      });
-      expect(usersService.update).toHaveBeenCalledWith(user.id, {
-        refreshToken: null,
-      });
+            await expect(service.login(loginDto)).rejects.toThrow(
+                new BadRequestException('Invalid password'),
+            );
+        });
     });
 
-    it('should throw an error if user is invalid', async () => {
-      const accessToken = 'accessToken';
+    describe('verifyEmail', () => {
+        it('should verify email successfully', async () => {
+            const token = 'token';
+            const verifiedData = {
+                id: '1',
+                email: 'test@example.com',
+                username: 'testuser',
+                emailIsVerified: true,
+            };
 
-      jest.spyOn(tokenService, 'verify').mockResolvedValue('1');
-      jest.spyOn(usersService, 'find').mockResolvedValue(null);
+            jest.spyOn(usersService, 'verifyEmail').mockResolvedValue(
+                verifiedData,
+            );
 
-      await expect(service.logout(accessToken)).rejects.toThrow(
-        new BadRequestException('Invalid user'),
-      );
-    });
-  });
+            const result = await service.verifyEmail(token);
 
-  describe('forgotPassword', () => {
-    it('should send a password reset email successfully', async () => {
-      const email = 'test@example.com';
-      const user = {
-        id: '1',
-        email,
-        username: 'testuser',
-        password: 'hashedPassword',
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+            expect(result).toEqual(verifiedData);
+            expect(usersService.verifyEmail).toHaveBeenCalledWith(token);
+        });
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(tokenService, 'generate').mockResolvedValue('token');
-      jest.spyOn(mailService, 'sendEmail').mockResolvedValue(null);
+        it('should throw an error if email verification fails', async () => {
+            const token = 'token';
 
-      await service.forgotPassword(email);
+            jest.spyOn(usersService, 'verifyEmail').mockRejectedValue(
+                new Error('Email verification failed'),
+            );
 
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, { email });
-      expect(tokenService.generate).toHaveBeenCalledWith(user.id);
-      expect(mailService.sendEmail).toHaveBeenCalledWith(
-        email,
-        'Password Reset Request',
-        expect.stringContaining('reset-password?token=token'),
-      );
+            await expect(service.verifyEmail(token)).rejects.toThrow(
+                'Email verification failed',
+            );
+        });
     });
 
-    it('should throw an error if user is not found', async () => {
-      const email = 'test@example.com';
+    describe('refreshTokens', () => {
+        it('should refresh tokens successfully', async () => {
+            const userId = '1';
+            const tokens = {
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+            };
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(null);
+            jest.spyOn(tokenService, 'authTokens').mockResolvedValue(tokens);
+            jest.spyOn(argon2, 'hash').mockResolvedValue('hashedRefreshToken');
+            jest.spyOn(usersService, 'update').mockResolvedValue(null);
 
-      await expect(service.forgotPassword(email)).rejects.toThrow(
-        new BadRequestException('User not found'),
-      );
-    });
-  });
+            const result = await service.refreshTokens(userId);
 
-  describe('changePassword', () => {
-    it('should change the password successfully', async () => {
-      const userId = '1';
-      const changePasswordDto: ChangePasswordDto = {
-        currentPassword: 'currentPassword',
-        newPassword: 'newPassword',
-      };
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        username: 'testuser',
-        password: await argon2.hash(changePasswordDto.currentPassword),
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+            expect(result).toEqual(tokens);
+            expect(tokenService.authTokens).toHaveBeenCalledWith(userId);
+            expect(argon2.hash).toHaveBeenCalledWith(tokens.refreshToken);
+            expect(usersService.update).toHaveBeenCalledWith(userId, {
+                refreshToken: 'hashedRefreshToken',
+            });
+        });
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest
-        .spyOn(argon2, 'verify')
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
-      jest.spyOn(argon2, 'hash').mockResolvedValue('hashedNewPassword');
-      jest.spyOn(usersService, 'update').mockResolvedValue(null);
+        it('should throw an error if token refresh fails', async () => {
+            const userId = '1';
 
-      await service.changePassword(userId, changePasswordDto);
+            jest.spyOn(tokenService, 'authTokens').mockRejectedValue(
+                new Error('Token refresh failed'),
+            );
 
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
-        id: userId,
-      });
-      expect(argon2.verify).toHaveBeenCalledWith(
-        user.password,
-        changePasswordDto.currentPassword,
-      );
-      expect(argon2.verify).toHaveBeenCalledWith(
-        user.password,
-        changePasswordDto.newPassword,
-      );
-      expect(argon2.hash).toHaveBeenCalledWith(changePasswordDto.newPassword);
-      expect(usersService.update).toHaveBeenCalledWith(userId, {
-        password: 'hashedNewPassword',
-      });
+            await expect(service.refreshTokens(userId)).rejects.toThrow(
+                'Token refresh failed',
+            );
+        });
     });
 
-    it('should throw an error if current password is incorrect', async () => {
-      const userId = '1';
-      const changePasswordDto: ChangePasswordDto = {
-        currentPassword: 'currentPassword',
-        newPassword: 'newPassword',
-      };
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        username: 'testuser',
-        password: await argon2.hash('wrongPassword'),
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    describe('logout', () => {
+        it('should logout a user successfully', async () => {
+            const accessToken = 'accessToken';
+            const user = {
+                id: '1',
+                email: 'test@example.com',
+                username: 'testuser',
+                password: 'hashedPassword',
+                role: Role.user,
+                refreshToken: 'refreshToken',
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(argon2, 'verify').mockResolvedValue(false);
+            jest.spyOn(tokenService, 'verify').mockResolvedValue(user.id);
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(usersService, 'update').mockResolvedValue(null);
 
-      await expect(
-        service.changePassword(userId, changePasswordDto),
-      ).rejects.toThrow(
-        new BadRequestException('Current password is incorrect'),
-      );
+            const result = await service.logout(accessToken);
+
+            expect(result).toEqual({ message: 'Logout successful' });
+            expect(tokenService.verify).toHaveBeenCalledWith(accessToken);
+            expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+                id: user.id,
+            });
+            expect(usersService.update).toHaveBeenCalledWith(user.id, {
+                refreshToken: null,
+            });
+        });
+
+        it('should throw an error if user is invalid', async () => {
+            const accessToken = 'accessToken';
+
+            jest.spyOn(tokenService, 'verify').mockResolvedValue('1');
+            jest.spyOn(usersService, 'find').mockResolvedValue(null);
+
+            await expect(service.logout(accessToken)).rejects.toThrow(
+                new BadRequestException('Invalid user'),
+            );
+        });
     });
 
-    it('should throw an error if new password is the same as the current password', async () => {
-      const userId = '1';
-      const changePasswordDto: ChangePasswordDto = {
-        currentPassword: 'currentPassword',
-        newPassword: 'currentPassword',
-      };
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        username: 'testuser',
-        password: await argon2.hash(changePasswordDto.currentPassword),
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    describe('forgotPassword', () => {
+        it('should send a password reset email successfully', async () => {
+            const email = 'test@example.com';
+            const user = {
+                id: '1',
+                email,
+                username: 'testuser',
+                password: 'hashedPassword',
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(tokenService, 'generate').mockResolvedValue('token');
+            jest.spyOn(mailService, 'sendEmail').mockResolvedValue(null);
 
-      await expect(
-        service.changePassword(userId, changePasswordDto),
-      ).rejects.toThrow(
-        new BadRequestException(
-          'New password cannot be the same as the current password',
-        ),
-      );
-    });
-  });
+            await service.forgotPassword(email);
 
-  describe('resetPassword', () => {
-    it('should reset the password successfully', async () => {
-      const token = 'token';
-      const newPassword = 'newPassword';
-      const userId = '1';
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        username: 'testuser',
-        password: 'hashedPassword',
-        role: Role.user,
-        phoneNumber: '1234567890',
-        emailIsVerified: true,
-        refreshToken: 'refreshToken',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+            expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+                email,
+            });
+            expect(tokenService.generate).toHaveBeenCalledWith(user.id);
+            expect(mailService.sendEmail).toHaveBeenCalledWith(
+                email,
+                'Password Reset Request',
+                expect.stringContaining('reset-password?token=token'),
+            );
+        });
 
-      jest.spyOn(tokenService, 'verify').mockResolvedValue(userId);
-      jest.spyOn(usersService, 'find').mockResolvedValue(user);
-      jest.spyOn(argon2, 'hash').mockResolvedValue('hashedNewPassword');
-      jest.spyOn(usersService, 'update').mockResolvedValue(null);
+        it('should throw an error if user is not found', async () => {
+            const email = 'test@example.com';
 
-      await service.resetPassword(token, newPassword);
+            jest.spyOn(usersService, 'find').mockResolvedValue(null);
 
-      expect(tokenService.verify).toHaveBeenCalledWith(token);
-      expect(usersService.find).toHaveBeenCalledWith(AuthService, {
-        id: userId,
-      });
-      expect(argon2.hash).toHaveBeenCalledWith(newPassword);
-      expect(usersService.update).toHaveBeenCalledWith(userId, {
-        password: 'hashedNewPassword',
-      });
+            await expect(service.forgotPassword(email)).rejects.toThrow(
+                new BadRequestException('User not found'),
+            );
+        });
     });
 
-    it('should throw an error if user is not found', async () => {
-      const token = 'token';
-      const newPassword = 'newPassword';
-      const userId = '1';
+    describe('changePassword', () => {
+        it('should change the password successfully', async () => {
+            const userId = '1';
+            const changePasswordDto: ChangePasswordDto = {
+                currentPassword: 'currentPassword',
+                newPassword: 'newPassword',
+            };
+            const user = {
+                id: '1',
+                email: 'test@example.com',
+                username: 'testuser',
+                password: await argon2.hash(changePasswordDto.currentPassword),
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-      jest.spyOn(tokenService, 'verify').mockResolvedValue(userId);
-      jest.spyOn(usersService, 'find').mockResolvedValue(null);
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(argon2, 'verify')
+                .mockResolvedValueOnce(true)
+                .mockResolvedValueOnce(false);
+            jest.spyOn(argon2, 'hash').mockResolvedValue('hashedNewPassword');
+            jest.spyOn(usersService, 'update').mockResolvedValue(null);
 
-      await expect(service.resetPassword(token, newPassword)).rejects.toThrow(
-        new UnauthorizedException('User not found'),
-      );
+            await service.changePassword(userId, changePasswordDto);
+
+            expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+                id: userId,
+            });
+            expect(argon2.verify).toHaveBeenCalledWith(
+                user.password,
+                changePasswordDto.currentPassword,
+            );
+            expect(argon2.verify).toHaveBeenCalledWith(
+                user.password,
+                changePasswordDto.newPassword,
+            );
+            expect(argon2.hash).toHaveBeenCalledWith(
+                changePasswordDto.newPassword,
+            );
+            expect(usersService.update).toHaveBeenCalledWith(userId, {
+                password: 'hashedNewPassword',
+            });
+        });
+
+        it('should throw an error if current password is incorrect', async () => {
+            const userId = '1';
+            const changePasswordDto: ChangePasswordDto = {
+                currentPassword: 'currentPassword',
+                newPassword: 'newPassword',
+            };
+            const user = {
+                id: '1',
+                email: 'test@example.com',
+                username: 'testuser',
+                password: await argon2.hash('wrongPassword'),
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(argon2, 'verify').mockResolvedValue(false);
+
+            await expect(
+                service.changePassword(userId, changePasswordDto),
+            ).rejects.toThrow(
+                new BadRequestException('Current password is incorrect'),
+            );
+        });
+
+        it('should throw an error if new password is the same as the current password', async () => {
+            const userId = '1';
+            const changePasswordDto: ChangePasswordDto = {
+                currentPassword: 'currentPassword',
+                newPassword: 'currentPassword',
+            };
+            const user = {
+                id: '1',
+                email: 'test@example.com',
+                username: 'testuser',
+                password: await argon2.hash(changePasswordDto.currentPassword),
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(argon2, 'verify').mockResolvedValue(true);
+
+            await expect(
+                service.changePassword(userId, changePasswordDto),
+            ).rejects.toThrow(
+                new BadRequestException(
+                    'New password cannot be the same as the current password',
+                ),
+            );
+        });
     });
-  });
+
+    describe('resetPassword', () => {
+        it('should reset the password successfully', async () => {
+            const token = 'token';
+            const newPassword = 'newPassword';
+            const userId = '1';
+            const user = {
+                id: '1',
+                email: 'test@example.com',
+                username: 'testuser',
+                password: 'hashedPassword',
+                role: Role.user,
+                phoneNumber: '1234567890',
+                emailIsVerified: true,
+                refreshToken: 'refreshToken',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            jest.spyOn(tokenService, 'verify').mockResolvedValue(userId);
+            jest.spyOn(usersService, 'find').mockResolvedValue(user);
+            jest.spyOn(argon2, 'hash').mockResolvedValue('hashedNewPassword');
+            jest.spyOn(usersService, 'update').mockResolvedValue(null);
+
+            await service.resetPassword(token, newPassword);
+
+            expect(tokenService.verify).toHaveBeenCalledWith(token);
+            expect(usersService.find).toHaveBeenCalledWith(AuthService, {
+                id: userId,
+            });
+            expect(argon2.hash).toHaveBeenCalledWith(newPassword);
+            expect(usersService.update).toHaveBeenCalledWith(userId, {
+                password: 'hashedNewPassword',
+            });
+        });
+
+        it('should throw an error if user is not found', async () => {
+            const token = 'token';
+            const newPassword = 'newPassword';
+            const userId = '1';
+
+            jest.spyOn(tokenService, 'verify').mockResolvedValue(userId);
+            jest.spyOn(usersService, 'find').mockResolvedValue(null);
+
+            await expect(
+                service.resetPassword(token, newPassword),
+            ).rejects.toThrow(new UnauthorizedException('User not found'));
+        });
+    });
 });
