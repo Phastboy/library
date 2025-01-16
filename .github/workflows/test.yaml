@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   test:
@@ -18,9 +18,5 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Move to apps/api directory
-        run: cd apps/api
-
       - name: Run Jest tests
-        run: npm test
-  
+        run: pwd &&\ npm test
