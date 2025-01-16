@@ -18,12 +18,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Move to apps/api directory
-        run: cd apps/api
-
-      - name: Verify current directory
-        run: pwd
-
       - name: Run tests
-        run: npm run test
-    
+        run: npx turbo test
+  
