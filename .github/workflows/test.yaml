@@ -18,8 +18,5 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Move to apps/api directory
-        run: cd apps/api
-
-      - name: Run Jest tests
-        run: pwd &&\ npm test
+      - name: Move to apps/api directory and test
+        run: cd apps/api &&\ pwd &&\ npm test
