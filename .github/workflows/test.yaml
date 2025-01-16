@@ -15,15 +15,15 @@ jobs:
         with:
           node-version: 'latest'
 
-      - name: Verify Node.js installation
-        run: node -v
-
-      - name: Verify npm installation
-        run: npm -v
-
       - name: Install dependencies
         run: npm install
 
-      - name: Move to apps/api directory and test
-        run: cd apps/api &&\ npm run test
-      
+      - name: Move to apps/api directory
+        run: cd apps/api
+
+      - name: Verify current directory
+        run: pwd
+
+      - name: Run tests
+        run: npm run test
+    
