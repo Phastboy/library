@@ -5,8 +5,8 @@ FROM node:18-alpine AS base
 WORKDIR /app
 
 # Install dependencies for the root directory
-COPY package.json yarn.lock ./
-RUN yarn install
+COPY package.json package-lock.json ./
+RUN npm install
 
 # Install turbo globally
 RUN npm i -g turbo
