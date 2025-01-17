@@ -1,37 +1,53 @@
-FROM node:lts-alpine
+FROM node:18-alpine AS base
+
+# The web Dockerfile is copy-pasted into our main docs at /docs/handbook/deploying-with-docker.
+# Make sure you update this Dockerfile, the Dockerfile in the web workspace, and copy it over to Dockerfile in the docs.
+
+FROM base AS builder
+# Install required dependencies
+RUN apk update && apk add --no-cache \
+  openssl \
+  libressl \
+  libc6-compat
 
 # Set environment variable
 ENV NODE_ENV=production
 
-# Create a user named nest and group nest
-RUN addgroup -S nest && adduser -S nest -G nest
+# Set working directory and install turbo
+WORKDIR /app
+RUN npm i -g turbo
 
-# Install OpenSSL (libressl) and required dependencies
-RUN apk update && apk add --no-cache \
-  openssl \
-  libressl \
-  && rm -rf /var/cache/apk/*
+# Copy only necessary files for pruning
+COPY package.json package-lock.json ./
+RUN turbo prune api --docker
 
-# Set working directory
-WORKDIR /usr/src/app
+# Add lockfile and package.json's of isolated subworkspace
+FROM base AS installer
+RUN apk update && apk add --no-cache libc6-compat
+WORKDIR /app
 
-# Copy package files and install dependencies
-COPY ["package.json", "package-lock.json*", "./"]
-RUN npm install --production --silent && mv node_modules ../
+# Copy pruned dependencies and install
+COPY --from=builder /app/out/json/ .
+RUN npm ci --production
 
-# Copy the rest of the application files
-COPY . .
-
-# Change ownership of application files to the nest user
-RUN chown -R nest:nest /usr/src/app /usr/src/node_modules
-
-# Switch to the nest user
-USER nest
-
-# Generate Prisma client and build the app
+# Copy full application source and generate Prisma client
+COPY --from=builder /app/out/full/ .
 RUN npx prisma generate
+
+# Build the application
 RUN npm run build
 
-# Expose port and start application
+FROM base AS runner
+WORKDIR /app
+
+# Create and use a non-root user
+RUN addgroup --system --gid 1001 nestjs \
+    && adduser --system --uid 1001 nestjs
+USER nestjs
+
+# Copy built application
+COPY --from=installer /app .
+
+# Expose application port and start
 EXPOSE 8080
 CMD ["npm", "run", "start:prod"]
