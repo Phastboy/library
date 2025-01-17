@@ -23,7 +23,7 @@ env:
 
 
 jobs:
-  build:
+  build-api:
 
     runs-on: ubuntu-latest
     permissions:
