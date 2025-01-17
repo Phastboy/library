@@ -5,7 +5,7 @@ FROM node:18-alpine AS base
 WORKDIR /app
 
 # Install dependencies for the root directory
-COPY package.json package-lock.json ./
+COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install
 
 # Install turbo globally
