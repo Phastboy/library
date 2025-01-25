@@ -104,7 +104,7 @@ describe('BooksService', () => {
 
     describe('remove', () => {
         it('should delete a book by ID', async () => {
-            const bookId = 1;
+            const bookId = '1';
             const deletedBook = {
                 id: bookId,
                 title: 'Test Book',
