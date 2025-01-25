@@ -20,17 +20,17 @@ export class BooksService {
         return this.prisma.book.findMany();
     }
 
-    findOne(id: number) {
+    findOne(id: string) {
         return `This action returns a #${id} book`;
     }
 
-    update(id: number, updateBookDto: UpdateBookDto) {
+    update(id: string, updateBookDto: UpdateBookDto) {
         return `This action updates a #${id} book`;
     }
 
-    async remove(id: number) {
+    async remove(id: string) {
         return this.prisma.book.delete({
-            where: { id: id.toString() },
+            where: { id },
         });
     }
 }
