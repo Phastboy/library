@@ -17,10 +17,12 @@ import { BooksModule } from './books/books.module';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        ThrottlerModule.forRoot({
-            ttl: 60,
-            limit: 10,
-        }),
+        ThrottlerModule.forRoot([
+            {
+               ttl: 60,
+               limit: 10,
+            }
+        ]),
         AuthModule,
         PrismaModule,
         UsersModule,
