@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { ProfileModule } from './profile/profile.module';
 import { MailModule } from './mail/mail.module';
 import { BooksModule } from './books/books.module';
+import { RateLimiterModule } from './rate-limiter/rate-limiter.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { BooksModule } from './books/books.module';
         ProfileModule,
         MailModule,
         BooksModule,
+        RateLimiterModule,
     ],
     controllers: [AppController],
     providers: [AppService],
