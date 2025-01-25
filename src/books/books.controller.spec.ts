@@ -51,7 +51,7 @@ describe('BooksController', () => {
 
             const result = await controller.remove(bookId);
 
-            expect(service.remove).toHaveBeenCalledWith(+bookId);
+            expect(service.remove).toHaveBeenCalledWith(bookId);
             expect(result).toEqual(deletedBook);
         });
     });
