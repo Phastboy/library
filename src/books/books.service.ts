@@ -16,8 +16,8 @@ export class BooksService {
         });
     }
 
-    findAll() {
-        return `This action returns all books`;
+    async findAll() {
+        return this.prisma.book.findMany();
     }
 
     findOne(id: number) {
