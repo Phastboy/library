@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BooksService } from './books.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookDto } from '../dto/book/create-book.dto';
+import { UpdateBookDto } from '../dto/book/update-book.dto';
 import { NotFoundException } from '@nestjs/common';
 
 describe('BooksService', () => {
@@ -14,6 +15,7 @@ describe('BooksService', () => {
                 create: jest.fn(),
                 findMany: jest.fn(),
                 findUnique: jest.fn(),
+                update: jest.fn(),
                 delete: jest.fn(),
             },
         };
@@ -136,6 +138,60 @@ describe('BooksService', () => {
             jest.spyOn(prisma.book, 'findUnique').mockResolvedValue(null);
 
             await expect(service.findOne(bookId)).rejects.toThrow(
+                new NotFoundException(`Book with ID ${bookId} not found`),
+            );
+        });
+    });
+
+    describe('update', () => {
+        it('should update a book with the given data', async () => {
+            const bookId = '1';
+            const updateBookDto: UpdateBookDto = {
+                title: 'Updated Test Book',
+                author: 'Updated Test Author',
+                description: 'Updated Description',
+                genre: 'Updated Genre',
+                ISBN: '1234567890',
+                totalCopies: 10,
+            };
+
+            const updatedBook = {
+                id: bookId,
+                ...updateBookDto,
+                availableCopies: 10,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            jest.spyOn(prisma.book, 'findUnique').mockResolvedValue(updatedBook);
+            jest.spyOn(prisma.book, 'update').mockResolvedValue(updatedBook);
+
+            const result = await service.update(bookId, updateBookDto);
+
+            expect(prisma.book.findUnique).toHaveBeenCalledWith({
+                where: { id: bookId },
+            });
+            expect(prisma.book.update).toHaveBeenCalledWith({
+                where: { id: bookId },
+                data: updateBookDto,
+            });
+            expect(result).toEqual(updatedBook);
+        });
+
+        it('should throw a NotFoundException if book is not found', async () => {
+            const bookId = '1';
+            const updateBookDto: UpdateBookDto = {
+                title: 'Updated Test Book',
+                author: 'Updated Test Author',
+                description: 'Updated Description',
+                genre: 'Updated Genre',
+                ISBN: '1234567890',
+                totalCopies: 10,
+            };
+
+            jest.spyOn(prisma.book, 'findUnique').mockResolvedValue(null);
+
+            await expect(service.update(bookId, updateBookDto)).rejects.toThrow(
                 new NotFoundException(`Book with ID ${bookId} not found`),
             );
         });

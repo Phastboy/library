@@ -30,8 +30,17 @@ export class BooksService {
         return book;
     }
 
-    update(id: string, updateBookDto: UpdateBookDto) {
-        return `This action updates a #${id} book`;
+    async update(id: string, updateBookDto: UpdateBookDto) {
+        const book = await this.prisma.book.findUnique({
+            where: { id },
+        });
+        if (!book) {
+            throw new NotFoundException(`Book with ID ${id} not found`);
+        }
+        return this.prisma.book.update({
+            where: { id },
+            data: updateBookDto,
+        });
     }
 
     async remove(id: string) {
