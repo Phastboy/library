@@ -146,7 +146,7 @@ describe('BooksService', () => {
     describe('update', () => {
         it('should update a book with the given data', async () => {
             const bookId = '1';
-            const updateBookDto: UpdateBookDto = {
+            const updateBookDto = {
                 title: 'Updated Test Book',
                 author: 'Updated Test Author',
                 description: 'Updated Description',
