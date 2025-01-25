@@ -9,6 +9,9 @@ import { ProfileModule } from './profile/profile.module';
 import { MailModule } from './mail/mail.module';
 import { BooksModule } from './books/books.module';
 import { RateLimiterModule } from './rate-limiter/rate-limiter.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
     imports: [
@@ -22,8 +25,18 @@ import { RateLimiterModule } from './rate-limiter/rate-limiter.module';
         MailModule,
         BooksModule,
         RateLimiterModule,
+        ThrottlerModule.forRoot({
+            ttl: 60,
+            limit: 10,
+        }),
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+        },
+    ],
 })
 export class AppModule {}
