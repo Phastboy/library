@@ -42,6 +42,9 @@
 - [ ] Review books
 - [ ] View book ratings and reviews
 
+#### Rate Limiting
+- [X] Global rate limiting configuration
+
 ## Tech Stack
 The project is built using the following technologies:
 - **Node.js**: A JavaScript runtime built on Chrome's V8 JavaScript engine.
