@@ -12,6 +12,7 @@ describe('BooksController', () => {
             book: {
                 create: jest.fn(),
                 delete: jest.fn(),
+                findUnique: jest.fn(),
             },
         };
 
@@ -53,6 +54,31 @@ describe('BooksController', () => {
 
             expect(service.remove).toHaveBeenCalledWith(bookId);
             expect(result).toEqual(deletedBook);
+        });
+    });
+
+    describe('findOne', () => {
+        it('should fetch a book by ID', async () => {
+            const bookId = '1';
+            const book = {
+                id: bookId,
+                title: 'Test Book',
+                author: 'Test Author',
+                description: 'Test Description',
+                genre: 'Test Genre',
+                ISBN: '1234567890',
+                totalCopies: 5,
+                availableCopies: 5,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            jest.spyOn(service, 'findOne').mockResolvedValue(book);
+
+            const result = await controller.findOne(bookId);
+
+            expect(service.findOne).toHaveBeenCalledWith(bookId);
+            expect(result).toEqual(book);
         });
     });
 });
