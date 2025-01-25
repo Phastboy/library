@@ -12,6 +12,7 @@ describe('BooksService', () => {
             book: {
                 create: jest.fn(),
                 findMany: jest.fn(),
+                delete: jest.fn(),
             },
         };
 
@@ -98,6 +99,33 @@ describe('BooksService', () => {
 
             expect(prisma.book.findMany).toHaveBeenCalled();
             expect(result).toEqual(books);
+        });
+    });
+
+    describe('remove', () => {
+        it('should delete a book by ID', async () => {
+            const bookId = '1';
+            const deletedBook = {
+                id: bookId,
+                title: 'Test Book',
+                author: 'Test Author',
+                description: 'Test Description',
+                genre: 'Test Genre',
+                ISBN: '1234567890',
+                totalCopies: 5,
+                availableCopies: 5,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            jest.spyOn(prisma.book, 'delete').mockResolvedValue(deletedBook);
+
+            const result = await service.remove(bookId);
+
+            expect(prisma.book.delete).toHaveBeenCalledWith({
+                where: { id: bookId.toString() },
+            });
+            expect(result).toEqual(deletedBook);
         });
     });
 });
