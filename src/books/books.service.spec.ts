@@ -102,47 +102,6 @@ describe('BooksService', () => {
             expect(prisma.book.findMany).toHaveBeenCalled();
             expect(result).toEqual(books);
         });
-
-        it('should fetch paginated books from the database', async () => {
-            const books = [
-                {
-                    id: '1',
-                    title: 'Book 1',
-                    author: 'Author 1',
-                    description: 'Description 1',
-                    genre: 'Genre 1',
-                    ISBN: 'ISBN1',
-                    totalCopies: 5,
-                    availableCopies: 5,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                {
-                    id: '2',
-                    title: 'Book 2',
-                    author: 'Author 2',
-                    description: 'Description 2',
-                    genre: 'Genre 2',
-                    ISBN: 'ISBN2',
-                    totalCopies: 3,
-                    availableCopies: 3,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-            ];
-
-            jest.spyOn(prisma.book, 'findMany').mockResolvedValue(books);
-
-            const page = 1;
-            const limit = 2;
-            const result = await service.findAll(page, limit);
-
-            expect(prisma.book.findMany).toHaveBeenCalledWith({
-                skip: (page - 1) * limit,
-                take: limit,
-            });
-            expect(result).toEqual(books);
-        });
     });
 
     describe('findOne', () => {
