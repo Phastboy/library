@@ -15,7 +15,7 @@
 
 ### Book
 #### Book browsing and searching
-- [ ] Book catalog
+- [X] Book catalog
 - [ ] search and filter books
 
 #### Book borrowing and returning
